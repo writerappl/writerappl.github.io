@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Writer V2</title>
+    <title>Writer V2.1</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
             flex-direction: column;
             flex-shrink: 0;
             background: #000;
-            z-index: 10;
+            z-index: 100; /* Ensure it stays on top */
         }
 
         .logo {
@@ -69,15 +69,17 @@
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            padding-bottom: 100px; /* Space for mobile nav */
+            padding-bottom: 100px;
+            position: relative; /* Context for absolute positioning */
         }
 
         .section {
-            display: none;
+            display: none; /* Completely removes from layout */
             max-width: 800px;
             margin: 0 auto;
             animation: fadeIn 0.3s ease;
         }
+        
         .section.active { display: block; }
 
         h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; }
@@ -224,129 +226,4 @@
         <div class="logo">writer.</div>
         <button class="menu-btn active" onclick="showSection('home')">Home</button>
         <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
-        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
-        <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
-        <button class="menu-btn" onclick="showSection('names')">Names</button>
-    </div>
-
-    <!-- MAIN AREA -->
-    <div class="main-content">
-        
-        <!-- HOME -->
-        <div id="home" class="section active">
-            <h2>Dashboard</h2>
-            <p class="subtitle">Welcome back to your workspace.</p>
-            
-            <div style="background: #111; padding: 25px; border-radius: 12px; border: 1px solid #222; margin-top: 20px;">
-                <h3 style="margin-top: 0; color: #888; font-size: 0.9rem; text-transform: uppercase;">Daily Inspiration</h3>
-                <p id="daily-quote" style="font-size: 1.2rem; font-style: italic; margin-bottom: 10px;">"There is no greater agony than bearing an untold story inside you."</p>
-                <small style="color: #666;">— Maya Angelou</small>
-            </div>
-        </div>
-
-        <!-- DICTIONARY -->
-        <div id="dictionary" class="section">
-            <h2>Dictionary</h2>
-            <p class="subtitle">Search definitions.</p>
-            <input type="text" id="dict-search" placeholder="Type a word..." onkeypress="if(event.key==='Enter') searchWord()">
-            <button class="action-btn" onclick="searchWord()">Search</button>
-            <div id="dict-result" class="result-box">Definitions will appear here...</div>
-        </div>
-
-        <!-- OCS -->
-        <div id="oc-creator" class="section">
-            <h2>OC Vault</h2>
-            <p class="subtitle">Manage your characters.</p>
-            
-            <button class="action-btn" onclick="toggleOCForm()" style="margin-bottom: 20px;">+ New Character</button>
-            
-            <div id="oc-form" style="display: none; background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
-                <input type="text" id="oc-name" placeholder="Full Name">
-                <input type="text" id="oc-role" placeholder="Role (Protagonist, Villain, etc.)">
-                <input type="text" id="oc-age" placeholder="Age">
-                <textarea id="oc-desc" rows="3" placeholder="Physical Description..."></textarea>
-                <textarea id="oc-lore" rows="3" placeholder="Backstory / Notes..."></textarea>
-                <button class="action-btn" onclick="saveOC()">Save Character</button>
-            </div>
-
-            <div id="oc-list"></div>
-        </div>
-
-        <!-- PROMPTS -->
-        <div id="prompts" class="section">
-            <h2>Prompt Generator</h2>
-            <p class="subtitle">Generate unique scenarios.</p>
-            <select id="prompt-genre">
-                <option value="romance">Romance</option>
-                <option value="horror">Horror</option>
-                <option value="fantasy">Fantasy</option>
-                <option value="scifi">Sci-Fi</option>
-                <option value="slice">Slice of Life</option>
-            </select>
-            <button class="action-btn" onclick="generatePrompt()">Generate Prompt</button>
-            <div id="prompt-result" class="result-box">Select a genre to begin...</div>
-        </div>
-
-        <!-- NAMES -->
-        <div id="names" class="section">
-            <h2>Name Generator</h2>
-            <p class="subtitle">Curated names database.</p>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="name-gender">
-                    <option value="feminine">Feminine</option>
-                    <option value="masculine">Masculine</option>
-                    <option value="neutral">Neutral</option>
-                </select>
-                <select id="name-count">
-                    <option value="1">1</option>
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                </select>
-            </div>
-            <button class="action-btn" onclick="generateNames()">Generate Names</button>
-            <div id="name-result" class="result-box">Names will appear here...</div>
-        </div>
-
-    </div>
-
-    <!-- OC DETAILS MODAL -->
-    <div id="oc-modal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModalBtn()">×</button>
-            <h2 id="modal-name">Name</h2>
-            <p id="modal-role" style="color: #888; margin-top: -5px;">Role</p>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-            <p><strong>Age:</strong> <span id="modal-age"></span></p>
-            <p><strong>Appearance:</strong></p>
-            <p id="modal-desc" style="color: #ccc; line-height: 1.4;"></p>
-            <p><strong>Backstory:</strong></p>
-            <p id="modal-lore" style="color: #ccc; line-height: 1.4;"></p>
-            <button class="action-btn" onclick="deleteOC()" style="background: #330000; color: #ff8888; margin-top: 20px;">Delete Character</button>
-        </div>
-    </div>
-
-    <script>
-        // --- NAVIGATION ---
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function toggleOCForm() {
-            const form = document.getElementById('oc-form');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // --- DATABASE (PROMPTS & NAMES) ---
-        const promptsDB = {
-            romance: [
-                "They were academic rivals, but forced to share a desk.",
-                "A barista who writes messages on cups, and a customer who writes back.",
-                "He's a ghost hunter. She's the ghost he can't catch.",
-                "Meeting at a wedding: one is the bride's ex, one is the groom's ex.",
-                "Fake dating to survive the holidays, but the snowstorm traps them for a week.",
-                "The villain falls in love with the hero's sidekick."
-            ],
-            hor
+        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</butto
