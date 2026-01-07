@@ -1,13 +1,83 @@
-
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Writer's Block Universe</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writer</title>
+    
+    <!-- This loads the modern "Inter" font from Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* This removes default spacing so the black covers the whole screen */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000000; /* Pure Black */
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Stops scrolling for a clean app feel */
+        }
+
+        /* Centers everything in the middle of the screen */
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        /* The Main Logo Text */
+        h1 {
+            font-size: 4rem; /* Big text */
+            font-weight: 600;
+            letter-spacing: -2px; /* Tight spacing looks modern */
+            margin: 0;
+            background: linear-gradient(to bottom, #ffffff, #666666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; /* Makes the text look metallic/gradient */
+        }
+
+        /* The subtitle */
+        p {
+            font-size: 1.2rem;
+            color: #888888; /* Grey text is more elegant than white */
+            margin-top: 10px;
+            font-weight: 300;
+        }
+
+        /* The "Get Started" Button */
+        .button {
+            margin-top: 40px;
+            padding: 12px 30px;
+            border: 1px solid #333;
+            border-radius: 30px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: white;
+            color: black;
+            border-color: white;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <center><h1>Writer's Block Universe</h1></center>
-  <p>My website is live.</p>
+
+    <div class="container">
+        <h1>writer.</h1>
+        <p>The universe for your stories.</p>
+        <a href="#" class="button">Enter App</a>
+    </div>
+
 </body>
 </html>
