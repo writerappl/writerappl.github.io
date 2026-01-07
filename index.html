@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>writer</title>
+    <title>Writer V3</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
             flex-direction: column;
             flex-shrink: 0;
             background: #000;
-            z-index: 100; /* Ensure it stays on top */
+            z-index: 100;
         }
 
         .logo {
@@ -70,26 +70,18 @@
             padding: 40px;
             overflow-y: auto;
             padding-bottom: 100px;
-            position: relative; /* Context for absolute positioning */
+            position: relative;
         }
 
         .section {
-    display: none;
-    max-width: 800px;
-    margin: 0 auto;
-    animation: fadeIn 0.3s ease;
-    /* THIS IS THE FIX: */
-    pointer-events: none; 
-}
-
-.section.active {
-    display: block;
-    pointer-events: auto;
-}
-
+            display: none;
+            max-width: 900px; /* Wider for grid */
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+            pointer-events: none; /* CLICK FIX */
         }
         
-        .section.active { display: block; }
+        .section.active { display: block; pointer-events: auto; }
 
         h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; }
         .subtitle { color: var(--text-dim); margin: 0 0 30px 0; font-weight: 300; }
@@ -133,30 +125,40 @@
             line-height: 1.5;
         }
 
-        /* --- OC CARDS --- */
+        /* --- OC GRID LAYOUT (NEW) --- */
+        .oc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
         .oc-card {
             border: 1px solid var(--border);
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            border-radius: 12px;
             background: #0a0a0a;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .oc-card:hover { background: #1a1a1a; }
-        
-        .oc-pfp {
-            width: 50px; height: 50px;
-            background: #333;
-            border-radius: 50%;
-            flex-shrink: 0;
+            transition: transform 0.2s;
+            overflow: hidden;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            height: 250px;
+        }
+        .oc-card:hover { transform: translateY(-3px); border-color: #666; }
+        
+        .oc-card-img {
+            width: 100%;
+            height: 150px;
+            background-color: #222;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .oc-card-info {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
-            font-size: 1.2rem;
         }
 
         /* --- MODAL (POPUP) --- */
@@ -165,28 +167,45 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 200;
             justify-content: center;
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
+            backdrop-filter: blur(5px);
         }
         .modal-content {
             background: #111;
             border: 1px solid #333;
-            padding: 30px;
             border-radius: 12px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
+        .modal-header-img {
+            width: 100%;
+            height: 200px;
+            background-color: #222;
+            background-size: cover;
+            background-position: center;
+        }
+        .modal-body { padding: 30px; }
+
         .close-btn {
             position: absolute;
             top: 15px; right: 15px;
-            background: none; border: none;
-            color: #666; font-size: 1.5rem;
+            background: rgba(0,0,0,0.5); 
+            border: none;
+            color: white; width: 30px; height: 30px;
+            border-radius: 50%;
+            font-size: 1.2rem;
             cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* --- MOBILE STYLES --- */
@@ -271,16 +290,29 @@
             
             <button class="action-btn" onclick="toggleOCForm()" style="margin-bottom: 20px;">+ New Character</button>
             
+            <!-- NEW EXPANDED FORM -->
             <div id="oc-form" style="display: none; background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
-                <input type="text" id="oc-name" placeholder="Full Name">
-                <input type="text" id="oc-role" placeholder="Role (Protagonist, Villain, etc.)">
-                <input type="text" id="oc-age" placeholder="Age">
-                <textarea id="oc-desc" rows="3" placeholder="Physical Description..."></textarea>
+                <h3 style="margin-top:0;">Basic Info</h3>
+                <input type="text" id="oc-name" placeholder="Full Name (Required)">
+                <input type="file" id="oc-image" accept="image/*" style="padding: 10px;">
+                <p style="font-size: 0.8rem; color: #666; margin-top: -10px; margin-bottom: 15px;">Upload Image (Max 1MB)</p>
+
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="oc-role" placeholder="Role (Protagonist, etc)">
+                    <input type="text" id="oc-age" placeholder="Age">
+                </div>
+                
+                <h3 style="margin-top:10px;">Details</h3>
+                <input type="text" id="oc-gender" placeholder="Gender / Pronouns">
+                <textarea id="oc-desc" rows="2" placeholder="Physical Appearance..."></textarea>
+                <textarea id="oc-personality" rows="2" placeholder="Personality Traits..."></textarea>
+                <textarea id="oc-goals" rows="2" placeholder="Goals & Fears..."></textarea>
                 <textarea id="oc-lore" rows="3" placeholder="Backstory / Notes..."></textarea>
-                <button class="action-btn" onclick="saveOC()">Save Character</button>
+                
+                <button class="action-btn" onclick="processAndSaveOC()">Save Character</button>
             </div>
 
-            <div id="oc-list"></div>
+            <div id="oc-list" class="oc-grid"></div>
         </div>
 
         <!-- PROMPTS -->
@@ -292,7 +324,6 @@
                 <option value="horror">Horror</option>
                 <option value="fantasy">Fantasy</option>
                 <option value="scifi">Sci-Fi</option>
-                <option value="slice">Slice of Life</option>
             </select>
             <button class="action-btn" onclick="generatePrompt()">Generate Prompt</button>
             <div id="prompt-result" class="result-box">Select a genre to begin...</div>
@@ -311,7 +342,6 @@
                 <select id="name-count">
                     <option value="1">1</option>
                     <option value="5">5</option>
-                    <option value="10">10</option>
                 </select>
             </div>
             <button class="action-btn" onclick="generateNames()">Generate Names</button>
@@ -324,15 +354,31 @@
     <div id="oc-modal" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModalBtn()">×</button>
-            <h2 id="modal-name">Name</h2>
-            <p id="modal-role" style="color: #888; margin-top: -5px;">Role</p>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
-            <p><strong>Age:</strong> <span id="modal-age"></span></p>
-            <p><strong>Appearance:</strong></p>
-            <p id="modal-desc" style="color: #ccc; line-height: 1.4;"></p>
-            <p><strong>Backstory:</strong></p>
-            <p id="modal-lore" style="color: #ccc; line-height: 1.4;"></p>
-            <button class="action-btn" onclick="deleteOC()" style="background: #330000; color: #ff8888; margin-top: 20px;">Delete Character</button>
+            <div id="modal-img-header" class="modal-header-img"></div>
+            
+            <div class="modal-body">
+                <h2 id="modal-name" style="margin-bottom: 5px;">Name</h2>
+                <p id="modal-role" style="color: #888; margin-top: 0;">Role</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                    <div><small style="color:#666">AGE</small><br><span id="modal-age"></span></div>
+                    <div><small style="color:#666">GENDER</small><br><span id="modal-gender"></span></div>
+                </div>
+
+                <p><strong>Appearance:</strong></p>
+                <p id="modal-desc" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
+                
+                <p><strong>Personality:</strong></p>
+                <p id="modal-personality" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
+
+                <p><strong>Goals & Fears:</strong></p>
+                <p id="modal-goals" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
+
+                <p><strong>Backstory:</strong></p>
+                <p id="modal-lore" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
+                
+                <button class="action-btn" onclick="deleteOC()" style="background: #330000; color: #ff8888; margin-top: 30px;">Delete Character</button>
+            </div>
         </div>
     </div>
 
@@ -350,178 +396,9 @@
             form.style.display = form.style.display === 'none' ? 'block' : 'none';
         }
 
-        // --- DATABASE (PROMPTS & NAMES) ---
+        // --- DATABASE ---
         const promptsDB = {
-            romance: [
-                "They were academic rivals, but forced to share a desk.",
-                "A barista who writes messages on cups, and a customer who writes back.",
-                "He's a ghost hunter. She's the ghost he can't catch.",
-                "Meeting at a wedding: one is the bride's ex, one is the groom's ex.",
-                "Fake dating to survive the holidays, but the snowstorm traps them for a week.",
-                "The villain falls in love with the hero's sidekick."
-            ],
-            horror: [
-                "The reflection in the mirror blinked one second too late.",
-                "You find a door in your house that wasn't there yesterday.",
-                "The baby monitor picks up a lullaby, but you live alone.",
-                "The GPS says 'Turn around possible,' but the road is straight.",
-                "Your cat keeps staring at the empty corner and hissing.",
-                "You wake up with a tally mark on your arm. Today there are two."
-            ],
-            fantasy: [
-                "The sword was too heavy for the knight, but light as a feather for the baker.",
-                "A dragon who hoards books instead of gold.",
-                "The king's crown was stolen by a gust of wind.",
-                "Magic is illegal, but you just sneezed sparks in public.",
-                "The tavern keeper is actually a retired Dark Lord.",
-                "The stars are disappearing one by one."
-            ],
-            scifi: [
-                "The AI asked, 'Am I dreaming?'",
-                "You receive a message from yourself, sent 10 years in the future.",
-                "Gravity stopped working for 5 seconds.",
-                "The first alien contact was just a spam call.",
-                "A robot adopts a stray dog."
-            ],
-            slice: [
-                "The coffee shop is closing, but nobody wants to leave.",
-                "Finding an old disposable camera and developing the photos.",
-                "A road trip with a broken radio and too much silence.",
-                "Moving into a new apartment and finding a letter from the previous tenant."
-            ]
-        };
-
-        const namesDB = {
-            feminine: ["Elara", "Seraphina", "Luna", "Iris", "Freya", "Nova", "Aria", "Lyra", "Isla", "Maeve", "Aurelia", "Kaia", "Zara", "Ophelia", "Esme", "Mila", "Ivy", "Sienna", "Ruby", "Alice"],
-            masculine: ["Atlas", "Orion", "Silas", "Ezra", "Felix", "Jasper", "Kai", "Leo", "Jude", "Finn", "Soren", "Milo", "Arlo", "Caleb", "Elias", "Julian", "Theo", "Xander", "Nico", "Roman"],
-            neutral: ["Rowan", "Sage", "River", "Phoenix", "Quinn", "Alex", "Jordan", "Morgan", "Casey", "Riley", "Taylor", "Skyler", "Reese", "Avery", "Parker", "Eden", "Ellis", "Remi", "Finley", "Dakota"]
-        };
-
-        // --- GENERATORS ---
-        function generatePrompt() {
-            const genre = document.getElementById('prompt-genre').value;
-            const list = promptsDB[genre];
-            const random = list[Math.floor(Math.random() * list.length)];
-            document.getElementById('prompt-result').innerText = random;
-        }
-
-        function generateNames() {
-            const gender = document.getElementById('name-gender').value;
-            const count = parseInt(document.getElementById('name-count').value);
-            const list = [...namesDB[gender]]; // Copy array
-            
-            // Shuffle array to prevent duplicates
-            for (let i = list.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [list[i], list[j]] = [list[j], list[i]];
-            }
-            
-            const selected = list.slice(0, count).join(", ");
-            document.getElementById('name-result').innerText = selected;
-        }
-
-        // --- DICTIONARY ---
-        async function searchWord() {
-            const word = document.getElementById('dict-search').value;
-            const res = document.getElementById('dict-result');
-            if(!word) return;
-            res.innerText = "Searching...";
-            try {
-                const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                const data = await req.json();
-                if(data.title) res.innerText = "Word not found.";
-                else {
-                    const def = data[0].meanings[0].definitions[0].definition;
-                    res.innerHTML = `<strong style="color:white; font-size:1.2rem;">${data[0].word}</strong><br><br>${def}`;
-                }
-            } catch(e) { res.innerText = "Error fetching definition."; }
-        }
-
-        // --- OC SYSTEM (LOCAL STORAGE) ---
-        let currentOCId = null; // Track which OC is open in modal
-
-        function loadOCs() {
-            const list = document.getElementById('oc-list');
-            list.innerHTML = "";
-            const ocs = JSON.parse(localStorage.getItem('myWriterOCs') || '[]');
-            
-            if(ocs.length === 0) {
-                list.innerHTML = "<p style='color:#444; text-align:center;'>No characters yet.</p>";
-                return;
-            }
-
-            ocs.forEach((oc, index) => {
-                const card = document.createElement('div');
-                card.className = 'oc-card';
-                card.onclick = () => openOCModal(index);
-                card.innerHTML = `
-                    <div class="oc-pfp">${oc.name.charAt(0).toUpperCase()}</div>
-                    <div>
-                        <h3 style="margin:0;">${oc.name}</h3>
-                        <small style="color:#666;">${oc.role}</small>
-                    </div>
-                `;
-                list.prepend(card); // Newest first
-            });
-        }
-
-        function saveOC() {
-            const name = document.getElementById('oc-name').value;
-            const role = document.getElementById('oc-role').value;
-            const age = document.getElementById('oc-age').value;
-            const desc = document.getElementById('oc-desc').value;
-            const lore = document.getElementById('oc-lore').value;
-
-            if(!name) return alert("Name is required!");
-
-            const newOC = { name, role, age, desc, lore, id: Date.now() };
-            const ocs = JSON.parse(localStorage.getItem('myWriterOCs') || '[]');
-            ocs.push(newOC);
-            localStorage.setItem('myWriterOCs', JSON.stringify(ocs));
-
-            // Reset Form
-            document.getElementById('oc-name').value = '';
-            document.getElementById('oc-role').value = '';
-            document.getElementById('oc-age').value = '';
-            document.getElementById('oc-desc').value = '';
-            document.getElementById('oc-lore').value = '';
-            toggleOCForm();
-            loadOCs();
-        }
-
-        // --- MODAL LOGIC ---
-        function openOCModal(index) {
-            const ocs = JSON.parse(localStorage.getItem('myWriterOCs') || '[]');
-            const oc = ocs[index];
-            currentOCId = index;
-
-            document.getElementById('modal-name').innerText = oc.name;
-            document.getElementById('modal-role').innerText = oc.role;
-            document.getElementById('modal-age').innerText = oc.age || "Unknown";
-            document.getElementById('modal-desc').innerText = oc.desc || "No description.";
-            document.getElementById('modal-lore').innerText = oc.lore || "No backstory.";
-            
-            document.getElementById('oc-modal').style.display = 'flex';
-        }
-
-        function closeModal(e) {
-            if(e.target.id === 'oc-modal') document.getElementById('oc-modal').style.display = 'none';
-        }
-        function closeModalBtn() {
-            document.getElementById('oc-modal').style.display = 'none';
-        }
-
-        function deleteOC() {
-            if(!confirm("Delete this character permanently?")) return;
-            const ocs = JSON.parse(localStorage.getItem('myWriterOCs') || '[]');
-            ocs.splice(currentOCId, 1);
-            localStorage.setItem('myWriterOCs', JSON.stringify(ocs));
-            closeModalBtn();
-            loadOCs();
-        }
-
-        // --- INIT ---
-        window.onload = loadOCs;
-    </script>
-</body>
-</html>
+            romance: ["Academic rivals forced to share a desk.", "Barista writes on cups, customer writes back.", "Ghost hunter falls for a ghost.", "Fake dating during a snowstorm.", "Villain falls for the sidekick."],
+            horror: ["Reflection blinked.", "Door appeared overnight.", "Baby monitor hears a lullaby.", "GPS says 'Turn around' on a straight road.", "Tally mark appeared on your arm."],
+            fantasy: ["Sword is heavy for the knight, light for the baker.", "Dragon hoards books.", "Magic is illegal, you sneezed sparks.", "Tavern keeper is a retired Dark Lord."],
+            scifi: ["AI asked 'Am I dreaming?'", "Message from yourself 10 years in future.", "Gravity stopped for 5 seconds.", "First a
