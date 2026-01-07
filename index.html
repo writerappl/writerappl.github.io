@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V9.0 (Vast)</title>
+    <title>Writer V10.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -41,6 +41,8 @@
 
         /* --- AUTH SCREEN --- */
         #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
+        .auth-toggle { color:#888; margin-top:20px; cursor:pointer; font-size:0.9rem; text-decoration:underline; }
+        .auth-toggle:hover { color:#fff; }
 
         /* --- OC GRID --- */
         .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
@@ -85,12 +87,21 @@
     <!-- AUTH SCREEN -->
     <div id="auth-screen">
         <h1 style="margin-bottom:10px;">writer.</h1>
-        <p style="color:#888; margin-bottom:30px;">Login to access your world.</p>
+        <p style="color:#888; margin-bottom:30px;" id="auth-subtitle">Login to access your world.</p>
+        
         <div style="width:100%; max-width:320px;">
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
-            <button class="btn" onclick="handleAuth()">Enter</button>
-            <p id="auth-msg" style="color:#ff5555; font-size:0.9rem; margin-top:15px; text-align:center;"></p>
+            
+            <!-- Login Button -->
+            <button class="btn" id="login-btn" onclick="performLogin()">Log In</button>
+            
+            <!-- Signup Button (Hidden by default) -->
+            <button class="btn" id="signup-btn" onclick="performSignup()" style="display:none; background:#222; color:#fff; border:1px solid #444;">Create Account</button>
+            
+            <p id="auth-msg" style="color:#ff5555; font-size:0.9rem; margin-top:15px; text-align:center; min-height:20px;"></p>
+            
+            <div id="auth-toggle-link" class="auth-toggle" onclick="toggleAuthMode()">Need an account? Sign Up</div>
         </div>
     </div>
 
@@ -279,7 +290,8 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let user = null;
-        let currentOc = null; // Stores full object of currently viewed OC
+        let currentOc = null; 
+        let isSignupMode = false;
 
         // --- AUTH ---
         async function checkSession() {
@@ -294,39 +306,63 @@
             }
         }
         
-        async function handleAuth() {
+        function toggleAuthMode() {
+            isSignupMode = !isSignupMode;
+            const title = document.querySelector('#auth-screen h1');
+            const sub = document.getElementById('auth-subtitle');
+            const logBtn = document.getElementById('login-btn');
+            const signBtn = document.getElementById('signup-btn');
+            const toggle = document.getElementById('auth-toggle-link');
+            const msg = document.getElementById('auth-msg');
+
+            msg.innerText = ""; // Clear errors
+
+            if(isSignupMode) {
+                title.innerText = "Join Writer.";
+                sub.innerText = "Create your account.";
+                logBtn.style.display = 'none';
+                signBtn.style.display = 'block';
+                toggle.innerText = "Already have an account? Log In";
+            } else {
+                title.innerText = "writer.";
+                sub.innerText = "Login to access your world.";
+                logBtn.style.display = 'block';
+                signBtn.style.display = 'none';
+                toggle.innerText = "Need an account? Sign Up";
+            }
+        }
+
+        async function performLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const msg = document.getElementById('auth-msg');
-            msg.innerText = "Processing...";
+            msg.innerText = "Logging in...";
 
-            // 1. Try to Login
-            let { data, error } = await db.auth.signInWithPassword({ email, password });
+            const { data, error } = await db.auth.signInWithPassword({ email, password });
             
             if (error) {
-                if(error.message.includes("Invalid login")) {
-                    // 2. If login fails, try to Sign Up to see if user exists
-                    let { error: upError } = await db.auth.signUp({ email, password });
-                    
-                    if(upError) {
-                        // If Sign Up also fails (e.g. "User already registered"), then it WAS a wrong password
-                        if(upError.message.includes("already registered") || upError.message.includes("unique constraint")) {
-                            msg.innerText = "Incorrect password.";
-                        } else {
-                            msg.innerText = upError.message;
-                        }
-                    } else {
-                        // If Sign Up worked, then it was a new user
-                        msg.innerText = "Account created! Logging in...";
-                        setTimeout(() => location.reload(), 1000);
-                    }
-                } else {
-                    msg.innerText = error.message;
-                }
+                msg.innerText = error.message; // "Invalid login credentials" etc
             } else {
                 location.reload();
             }
         }
+
+        async function performSignup() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('auth-msg');
+            msg.innerText = "Creating account...";
+
+            const { data, error } = await db.auth.signUp({ email, password });
+            
+            if (error) {
+                msg.innerText = error.message; // "User already registered" etc
+            } else {
+                msg.innerText = "Success! You are logged in.";
+                setTimeout(() => location.reload(), 1000);
+            }
+        }
+
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
         // --- PROFILES ---
@@ -379,7 +415,7 @@
 
         // 1. VIEW
         function openViewModal(oc) {
-            currentOc = oc; // Save for editing/deleting
+            currentOc = oc;
             document.getElementById('view-name').innerText = oc.name;
             document.getElementById('view-role').innerText = oc.role || "Unknown Role";
             document.getElementById('view-age').innerText = oc.age || "-";
@@ -396,16 +432,13 @@
             } else {
                 imgHeader.style.display = 'none';
             }
-            
             document.getElementById('oc-view-modal').style.display = 'flex';
         }
 
         // 2. CREATE / EDIT FORM
         function openOcForm(isEdit = false) {
             document.getElementById('oc-form-modal').style.display = 'block';
-            
             if(isEdit && currentOc) {
-                // Pre-fill for editing
                 document.getElementById('form-title').innerText = "Edit Character";
                 document.getElementById('form-id').value = currentOc.id;
                 document.getElementById('form-name').value = currentOc.name;
@@ -417,7 +450,6 @@
                 document.getElementById('form-goals').value = currentOc.goals;
                 document.getElementById('form-lore').value = currentOc.lore;
             } else {
-                // Clear for new
                 document.getElementById('form-title').innerText = "New Character";
                 document.getElementById('form-id').value = "";
                 document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i => i.value = "");
@@ -450,20 +482,15 @@
                 role: document.getElementById('form-role').value,
                 age: document.getElementById('form-age').value,
                 gender: document.getElementById('form-gender').value,
-                "desc": document.getElementById('form-desc').value, // Matches "desc" column
+                "desc": document.getElementById('form-desc').value,
                 personality: document.getElementById('form-personality').value,
                 goals: document.getElementById('form-goals').value,
                 lore: document.getElementById('form-lore').value
             };
             if(imageBase64) ocData.image = imageBase64;
 
-            if(id) {
-                // UPDATE
-                await db.from('characters').update(ocData).eq('id', id);
-            } else {
-                // INSERT
-                await db.from('characters').insert([ocData]);
-            }
+            if(id) { await db.from('characters').update(ocData).eq('id', id); } 
+            else { await db.from('characters').insert([ocData]); }
 
             document.getElementById('oc-form-modal').style.display='none';
             loadOcs();
@@ -487,7 +514,6 @@
                 document.getElementById('dict-result').innerHTML = `<h3 style="margin:0">${d[0].word}</h3><p>${d[0].meanings[0].definitions[0].definition}</p>${syns}`; 
             } catch(e) { document.getElementById('dict-result').innerText = "Word not found."; }
         }
-
         function generatePrompt() { 
             const genre = document.getElementById('prompt-genre').value;
             const prompts = {
@@ -499,7 +525,6 @@
             const p = prompts[genre];
             document.getElementById('prompt-result').innerText = p[Math.floor(Math.random()*p.length)];
         }
-
         function generateNames() {
             const count = parseInt(document.getElementById('name-count').value);
             const names = ["Rowan", "Sage", "River", "Alex", "Quinn", "Jordan", "Casey", "Riley", "Avery", "Cameron", "Dakota", "Ellis", "Emerson", "Finley", "Gray", "Harley", "Hayden", "Jamie", "Jesse", "Kendall"];
