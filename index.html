@@ -86,17 +86,73 @@
 
         /* --- MOBILE --- */
         @media(max-width:768px) {
-            body { flex-direction:column; }
-            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 20px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:column; align-items:center; z-index:9000; }
-            .nav-items { flex-direction:row; width:100%; justify-content:space-between; margin-bottom:6px; }
-            .profile-btn-container { border:none; padding:0; margin:0; width:100%; display:flex; justify-content:center; }
-            .logo { display:none; }
-            .menu-btn { padding:5px; justify-content:center; font-size:0.75rem; text-align:center; flex-direction:column; gap:4px; }
-            .main-content { padding:20px; padding-bottom:110px; }
-            /* Chat on mobile */
-            #tavern.section.active { height: calc(100vh - 120px); }
-            .form-grid { grid-template-columns: 1fr; }
-        }
+    body { flex-direction:column; }
+
+    .sidebar {
+        width:100%;
+        position:fixed;
+        bottom:0;
+        padding:8px 10px calc(8px + var(--safe-bottom));
+        background:rgba(0,0,0,0.98);
+        backdrop-filter:blur(12px);
+        border-top:1px solid var(--border);
+        border-right:none;
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+        justify-content:center;
+        z-index:9000;
+    }
+
+    .logo { display:none; }
+
+    .nav-items {
+        flex-direction:row;
+        width:auto;
+        background:#111;
+        border-radius:999px;
+        padding:4px;
+        border:1px solid var(--border);
+        gap:4px;
+        justify-content:center;
+    }
+
+    .menu-btn {
+        padding:6px 10px;
+        min-width:70px;
+        border-radius:999px;
+        font-size:0.7rem;
+        text-align:center;
+        flex-direction:row;
+        justify-content:center;
+        gap:4px;
+    }
+
+    .menu-btn.active {
+        background:#fff;
+        color:#000;
+    }
+
+    .profile-btn-container {
+        margin-left:10px;
+        margin-top:0;
+        padding-top:0;
+        border-top:none;
+        display:flex;
+        justify-content:center;
+    }
+
+    .main-content {
+        padding:20px;
+        padding-bottom:110px;
+    }
+
+    #tavern.section.active {
+        height:calc(100vh - 120px);
+    }
+
+    .form-grid { grid-template-columns:1fr; }
+}
     </style>
 </head>
 <body>
@@ -121,7 +177,7 @@
         <div class="nav-items">
             <button class="menu-btn active" onclick="nav('home')">Home</button>
             <button class="menu-btn" onclick="nav('ocs')">Characters</button>
-            <button class="menu-btn" onclick="nav('tavern')">Tavern <span style="font-size:0.6rem; background:#ff5555; padding:2px 5px; border-radius:4px; margin-left:5px;">LIVE</span></button>
+            <button class="menu-btn" onclick="nav('tavern')">Chat <span style="font-size:0.6rem; background:#ff5555; padding:2px 5px; border-radius:4px; margin-left:5px;">LIVE</span></button>
             <button class="menu-btn" onclick="nav('dictionary')">Dictionary</button>
             <button class="menu-btn" onclick="nav('prompts')">Prompts</button>
             <button class="menu-btn" onclick="nav('names')">Names</button>
@@ -145,18 +201,11 @@
         </div>
         
         <!-- TAVERN (CHAT) -->
-        <div id="tavern" class="section">
-            <h2 style="margin-bottom:10px;">The Tavern</h2>
-            <div class="chat-container">
-                <div id="chat-box" class="chat-messages">
-                    <div style="text-align:center; color:#444; margin-top:50px;">Loading scrolls...</div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Say something..." onkeypress="if(event.key==='Enter') sendMessage()">
-                    <button class="btn" onclick="sendMessage()">→</button>
-                </div>
-            </div>
-        </div>
+        <<div id="tavern" class="section">
+    <h2 style="margin-bottom:10px;">Chat</h2>
+    ...
+</div>
+
 
         <!-- PROFILE -->
         <div id="profile" class="section">
