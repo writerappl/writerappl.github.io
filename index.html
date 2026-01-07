@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Writer</title>
+    <title>Writer V2</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -14,8 +14,8 @@
             --text-main: #ffffff;
             --text-dim: #888888;
             --border: #333333;
-            --accent: #ffffff;
-            --nav-height: 60px; /* New variable for mobile nav */
+            --highlight: #ffffff;
+            --nav-height: 60px;
         }
 
         body {
@@ -28,14 +28,16 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR MENU (Desktop) */
+        /* --- SIDEBAR --- */
         .sidebar {
             width: 250px;
             border-right: 1px solid var(--border);
             padding: 20px;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0; /* Prevents sidebar from shrinking */
+            flex-shrink: 0;
+            background: #000;
+            z-index: 10;
         }
 
         .logo {
@@ -43,6 +45,7 @@
             font-weight: 600;
             margin-bottom: 40px;
             letter-spacing: -1px;
+            color: white;
         }
 
         .menu-btn {
@@ -50,25 +53,23 @@
             border: none;
             color: var(--text-dim);
             text-align: left;
-            padding: 15px 0;
+            padding: 15px 10px;
             font-size: 1rem;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: all 0.2s;
             font-family: 'Inter', sans-serif;
+            border-radius: 8px;
         }
 
-        .menu-btn:hover, .menu-btn.active {
-            color: var(--text-main);
-            font-weight: 600;
-        }
+        .menu-btn:hover { background: #111; color: white; }
+        .menu-btn.active { color: white; font-weight: 600; background: #222; }
 
-        /* MAIN CONTENT AREA */
+        /* --- MAIN CONTENT --- */
         .main-content {
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            /* Extra padding at bottom for mobile nav so content isn't hidden */
-            padding-bottom: 80px; 
+            padding-bottom: 100px; /* Space for mobile nav */
         }
 
         .section {
@@ -77,24 +78,23 @@
             margin: 0 auto;
             animation: fadeIn 0.3s ease;
         }
-
         .section.active { display: block; }
 
-        h2 { font-weight: 600; font-size: 2rem; margin-bottom: 10px; margin-top: 0; }
-        .subtitle { color: var(--text-dim); margin-bottom: 30px; margin-top: 0; }
+        h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; }
+        .subtitle { color: var(--text-dim); margin: 0 0 30px 0; font-weight: 300; }
 
-        /* INPUTS & BUTTONS */
+        /* --- INPUTS & UI --- */
         input, select, textarea {
             background: #111;
             border: 1px solid var(--border);
             color: white;
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             width: 100%;
             margin-bottom: 15px;
             font-family: 'Inter', sans-serif;
-            box-sizing: border-box; /* Fixes width issues */
-            font-size: 16px; /* Prevents zoom on iPhone */
+            box-sizing: border-box;
+            font-size: 16px;
         }
 
         button.action-btn {
@@ -105,11 +105,11 @@
             border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
-            width: 100%; /* Full width buttons on mobile look better */
+            width: 100%;
             max-width: 200px;
+            transition: opacity 0.2s;
         }
-        
-        button.action-btn:hover { background: #ddd; }
+        button.action-btn:active { opacity: 0.7; }
 
         .result-box {
             margin-top: 20px;
@@ -117,10 +117,12 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             min-height: 50px;
-            color: var(--text-dim);
+            color: #ccc;
             background: #0a0a0a;
+            line-height: 1.5;
         }
 
+        /* --- OC CARDS --- */
         .oc-card {
             border: 1px solid var(--border);
             padding: 15px;
@@ -130,58 +132,85 @@
             align-items: center;
             gap: 15px;
             background: #0a0a0a;
+            cursor: pointer;
+            transition: background 0.2s;
         }
+        .oc-card:hover { background: #1a1a1a; }
         
         .oc-pfp {
             width: 50px; height: 50px;
             background: #333;
             border-radius: 50%;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
         }
 
-        /* --- MOBILE RESPONSIVE MAGIC --- */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column; /* Stack vertically */
-            }
+        /* --- MODAL (POPUP) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: #111;
+            border: 1px solid #333;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            color: #666; font-size: 1.5rem;
+            cursor: pointer;
+        }
 
+        /* --- MOBILE STYLES --- */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            
             .sidebar {
                 position: fixed;
-                bottom: 0;
-                left: 0;
+                bottom: 0; left: 0;
                 width: 100%;
                 height: var(--nav-height);
                 border-right: none;
                 border-top: 1px solid var(--border);
-                background: #000000;
-                flex-direction: row; /* Horizontal menu */
+                flex-direction: row;
                 padding: 0;
                 justify-content: space-around;
-                align-items: center;
-                z-index: 100;
             }
 
-            .logo { display: none; } /* Hide logo on mobile to save space */
+            .logo { display: none; }
 
             .menu-btn {
                 padding: 0;
-                font-size: 0.8rem; /* Smaller text */
-                text-align: center;
+                font-size: 0.75rem;
                 flex: 1;
+                text-align: center;
                 height: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                border-radius: 0;
             }
+            .menu-btn.active { border-top: 2px solid white; background: none; }
 
-            .main-content {
-                padding: 20px;
-                padding-bottom: 90px; /* More space for bottom bar */
-            }
-
+            .main-content { padding: 20px; padding-bottom: 90px; }
             h2 { font-size: 1.8rem; }
-            
-            /* Make buttons full width on phone */
             button.action-btn { max-width: 100%; }
         }
 
@@ -190,44 +219,53 @@
 </head>
 <body>
 
-    <!-- SIDEBAR / BOTTOM NAV -->
+    <!-- NAV -->
     <div class="sidebar">
         <div class="logo">writer.</div>
-        <!-- Shortened names for mobile space -->
         <button class="menu-btn active" onclick="showSection('home')">Home</button>
-        <button class="menu-btn" onclick="showSection('dictionary')">Dict.</button>
+        <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
         <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
         <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
         <button class="menu-btn" onclick="showSection('names')">Names</button>
     </div>
 
-    <!-- CONTENT -->
+    <!-- MAIN AREA -->
     <div class="main-content">
         
         <!-- HOME -->
         <div id="home" class="section active">
-            <h2>Welcome.</h2>
-            <p class="subtitle">Select a tool to begin writing.</p>
+            <h2>Dashboard</h2>
+            <p class="subtitle">Welcome back to your workspace.</p>
+            
+            <div style="background: #111; padding: 25px; border-radius: 12px; border: 1px solid #222; margin-top: 20px;">
+                <h3 style="margin-top: 0; color: #888; font-size: 0.9rem; text-transform: uppercase;">Daily Inspiration</h3>
+                <p id="daily-quote" style="font-size: 1.2rem; font-style: italic; margin-bottom: 10px;">"There is no greater agony than bearing an untold story inside you."</p>
+                <small style="color: #666;">— Maya Angelou</small>
+            </div>
         </div>
 
         <!-- DICTIONARY -->
         <div id="dictionary" class="section">
             <h2>Dictionary</h2>
-            <p class="subtitle">Find definitions and synonyms.</p>
-            <input type="text" id="dict-search" placeholder="Type a word...">
+            <p class="subtitle">Search definitions.</p>
+            <input type="text" id="dict-search" placeholder="Type a word..." onkeypress="if(event.key==='Enter') searchWord()">
             <button class="action-btn" onclick="searchWord()">Search</button>
-            <div id="dict-result" class="result-box">Results...</div>
+            <div id="dict-result" class="result-box">Definitions will appear here...</div>
         </div>
 
-        <!-- OC CREATOR -->
+        <!-- OCS -->
         <div id="oc-creator" class="section">
             <h2>OC Vault</h2>
-            <p class="subtitle">Create and store characters.</p>
+            <p class="subtitle">Manage your characters.</p>
             
-            <div style="background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                <input type="text" id="oc-name" placeholder="Name">
-                <input type="text" id="oc-role" placeholder="Role (e.g. Protagonist)">
-                <textarea id="oc-desc" rows="3" placeholder="Description..."></textarea>
+            <button class="action-btn" onclick="toggleOCForm()" style="margin-bottom: 20px;">+ New Character</button>
+            
+            <div id="oc-form" style="display: none; background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
+                <input type="text" id="oc-name" placeholder="Full Name">
+                <input type="text" id="oc-role" placeholder="Role (Protagonist, Villain, etc.)">
+                <input type="text" id="oc-age" placeholder="Age">
+                <textarea id="oc-desc" rows="3" placeholder="Physical Description..."></textarea>
+                <textarea id="oc-lore" rows="3" placeholder="Backstory / Notes..."></textarea>
                 <button class="action-btn" onclick="saveOC()">Save Character</button>
             </div>
 
@@ -236,142 +274,79 @@
 
         <!-- PROMPTS -->
         <div id="prompts" class="section">
-            <h2>Prompt Gen</h2>
-            <p class="subtitle">Break your writer's block.</p>
+            <h2>Prompt Generator</h2>
+            <p class="subtitle">Generate unique scenarios.</p>
             <select id="prompt-genre">
                 <option value="romance">Romance</option>
                 <option value="horror">Horror</option>
-                <option value="comedy">Comedy</option>
                 <option value="fantasy">Fantasy</option>
+                <option value="scifi">Sci-Fi</option>
+                <option value="slice">Slice of Life</option>
             </select>
-            <button class="action-btn" onclick="generatePrompt()">Generate</button>
-            <div id="prompt-result" class="result-box">Prompt...</div>
+            <button class="action-btn" onclick="generatePrompt()">Generate Prompt</button>
+            <div id="prompt-result" class="result-box">Select a genre to begin...</div>
         </div>
 
         <!-- NAMES -->
         <div id="names" class="section">
-            <h2>Name Gen</h2>
-            <p class="subtitle">Find the perfect name.</p>
-            <select id="name-gender">
-                <option value="feminine">Feminine</option>
-                <option value="masculine">Masculine</option>
-                <option value="neutral">Neutral</option>
-            </select>
-            <select id="name-count">
-                <option value="1">1 Name</option>
-                <option value="5">5 Names</option>
-                <option value="10">10 Names</option>
-            </select>
-            <button class="action-btn" onclick="generateNames()">Generate</button>
-            <div id="name-result" class="result-box">Names...</div>
+            <h2>Name Generator</h2>
+            <p class="subtitle">Curated names database.</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select id="name-gender">
+                    <option value="feminine">Feminine</option>
+                    <option value="masculine">Masculine</option>
+                    <option value="neutral">Neutral</option>
+                </select>
+                <select id="name-count">
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
+            <button class="action-btn" onclick="generateNames()">Generate Names</button>
+            <div id="name-result" class="result-box">Names will appear here...</div>
         </div>
 
     </div>
 
-    <!-- JAVASCRIPT -->
+    <!-- OC DETAILS MODAL -->
+    <div id="oc-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModalBtn()">×</button>
+            <h2 id="modal-name">Name</h2>
+            <p id="modal-role" style="color: #888; margin-top: -5px;">Role</p>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+            <p><strong>Age:</strong> <span id="modal-age"></span></p>
+            <p><strong>Appearance:</strong></p>
+            <p id="modal-desc" style="color: #ccc; line-height: 1.4;"></p>
+            <p><strong>Backstory:</strong></p>
+            <p id="modal-lore" style="color: #ccc; line-height: 1.4;"></p>
+            <button class="action-btn" onclick="deleteOC()" style="background: #330000; color: #ff8888; margin-top: 20px;">Delete Character</button>
+        </div>
+    </div>
+
     <script>
-        // NAVIGATION
-        function showSection(sectionId) {
-            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
-            
-            // Highlight the correct button even if text is different (simple match)
+        // --- NAVIGATION ---
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
             event.target.classList.add('active');
         }
 
-        // DICTIONARY
-        async function searchWord() {
-            const word = document.getElementById('dict-search').value;
-            const resultBox = document.getElementById('dict-result');
-            if(!word) return;
-            resultBox.innerHTML = "Searching...";
-            try {
-                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                const data = await response.json();
-                if (data.title === "No Definitions Found") {
-                    resultBox.innerHTML = "Word not found.";
-                } else {
-                    const def = data[0].meanings[0].definitions[0].definition;
-                    resultBox.innerHTML = `<strong>${word}</strong><br><br>${def}`;
-                }
-            } catch (error) { resultBox.innerHTML = "Error."; }
+        function toggleOCForm() {
+            const form = document.getElementById('oc-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
         }
 
-        // OC CREATOR (Load saved OCs on start)
-        window.onload = function() {
-            const savedOCs = JSON.parse(localStorage.getItem('myOCs') || '[]');
-            savedOCs.forEach(oc => renderOCCard(oc));
-        };
-
-        function saveOC() {
-            const name = document.getElementById('oc-name').value;
-            const role = document.getElementById('oc-role').value;
-            const desc = document.getElementById('oc-desc').value;
-            
-            if(!name) return alert("Name is required!");
-
-            const newOC = { name, role, desc };
-            renderOCCard(newOC);
-
-            // SAVE TO LOCAL STORAGE
-            const currentOCs = JSON.parse(localStorage.getItem('myOCs') || '[]');
-            currentOCs.push(newOC);
-            localStorage.setItem('myOCs', JSON.stringify(currentOCs));
-
-            // Clear inputs
-            document.getElementById('oc-name').value = '';
-            document.getElementById('oc-role').value = '';
-            document.getElementById('oc-desc').value = '';
-        }
-
-        function renderOCCard(oc) {
-            const ocList = document.getElementById('oc-list');
-            const card = document.createElement('div');
-            card.className = 'oc-card';
-            card.innerHTML = `
-                <div class="oc-pfp"></div>
-                <div>
-                    <h3 style="margin: 0;">${oc.name}</h3>
-                    <small style="color: #888;">${oc.role}</small>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${oc.desc}</p>
-                </div>
-            `;
-            ocList.prepend(card);
-        }
-
-        // PROMPTS
-        const prompts = {
-            romance: ["They were rivals in business, but stuck in an elevator.", "She forgot her umbrella, he offered his.", "A letter meant for someone else arrives at her door."],
-            horror: ["The reflection in the mirror blinked.", "The GPS led them to a road that wasn't on the map.", "Every night, the door opens exactly one inch."],
-            comedy: ["A wizard tries to live a normal life as an accountant.", "He accidentally joined a cult thinking it was a yoga class.", "Her cat started talking, but only complains about the food."],
-            fantasy: ["The sword was too heavy for the hero, but light for the baker.", "Dragons are actually just very big, scaly pigeons.", "The king's crown was stolen by a gust of wind."]
-        };
-
-        function generatePrompt() {
-            const genre = document.getElementById('prompt-genre').value;
-            const list = prompts[genre];
-            const random = list[Math.floor(Math.random() * list.length)];
-            document.getElementById('prompt-result').innerText = random;
-        }
-
-        // NAMES
-        const namesDB = {
-            feminine: ["Elara", "Seraphina", "Luna", "Iris", "Freya", "Nova", "Aria"],
-            masculine: ["Atlas", "Orion", "Silas", "Ezra", "Felix", "Jasper", "Kai"],
-            neutral: ["Rowan", "Sage", "River", "Phoenix", "Quinn", "Alex", "Jordan"]
-        };
-
-        function generateNames() {
-            const gender = document.getElementById('name-gender').value;
-            const count = parseInt(document.getElementById('name-count').value);
-            const list = namesDB[gender];
-            let result = "";
-            for(let i=0; i<count; i++) {
-                result += list[Math.floor(Math.random() * list.length)] + (i < count-1 ? ", " : "");
-            }
-            document.getElementById('name-result').innerText = result;
-        }
-    </script>
-</body>
-</html>
+        // --- DATABASE (PROMPTS & NAMES) ---
+        const promptsDB = {
+            romance: [
+                "They were academic rivals, but forced to share a desk.",
+                "A barista who writes messages on cups, and a customer who writes back.",
+                "He's a ghost hunter. She's the ghost he can't catch.",
+                "Meeting at a wedding: one is the bride's ex, one is the groom's ex.",
+                "Fake dating to survive the holidays, but the snowstorm traps them for a week.",
+                "The villain falls in love with the hero's sidekick."
+            ],
+            hor
