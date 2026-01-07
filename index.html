@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Writer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +15,7 @@
             --text-dim: #888888;
             --border: #333333;
             --accent: #ffffff;
+            --nav-height: 60px; /* New variable for mobile nav */
         }
 
         body {
@@ -27,13 +28,14 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR MENU */
+        /* SIDEBAR MENU (Desktop) */
         .sidebar {
             width: 250px;
             border-right: 1px solid var(--border);
             padding: 20px;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0; /* Prevents sidebar from shrinking */
         }
 
         .logo {
@@ -48,7 +50,7 @@
             border: none;
             color: var(--text-dim);
             text-align: left;
-            padding: 10px 0;
+            padding: 15px 0;
             font-size: 1rem;
             cursor: pointer;
             transition: color 0.2s;
@@ -57,7 +59,7 @@
 
         .menu-btn:hover, .menu-btn.active {
             color: var(--text-main);
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* MAIN CONTENT AREA */
@@ -65,48 +67,50 @@
             flex: 1;
             padding: 40px;
             overflow-y: auto;
+            /* Extra padding at bottom for mobile nav so content isn't hidden */
+            padding-bottom: 80px; 
         }
 
         .section {
-            display: none; /* Hides all sections by default */
+            display: none;
             max-width: 800px;
             margin: 0 auto;
             animation: fadeIn 0.3s ease;
         }
 
-        .section.active {
-            display: block; /* Shows the active section */
-        }
+        .section.active { display: block; }
 
-        h2 { font-weight: 600; font-size: 2rem; margin-bottom: 10px; }
-        .subtitle { color: var(--text-dim); margin-bottom: 30px; }
+        h2 { font-weight: 600; font-size: 2rem; margin-bottom: 10px; margin-top: 0; }
+        .subtitle { color: var(--text-dim); margin-bottom: 30px; margin-top: 0; }
 
         /* INPUTS & BUTTONS */
         input, select, textarea {
             background: #111;
             border: 1px solid var(--border);
             color: white;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             width: 100%;
             margin-bottom: 15px;
             font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
+            box-sizing: border-box; /* Fixes width issues */
+            font-size: 16px; /* Prevents zoom on iPhone */
         }
 
         button.action-btn {
             background: white;
             color: black;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 25px;
+            border-radius: 30px;
             cursor: pointer;
             font-weight: 600;
+            width: 100%; /* Full width buttons on mobile look better */
+            max-width: 200px;
         }
         
         button.action-btn:hover { background: #ddd; }
 
-        /* TOOL SPECIFIC STYLES */
         .result-box {
             margin-top: 20px;
             padding: 20px;
@@ -114,6 +118,7 @@
             border-radius: 8px;
             min-height: 50px;
             color: var(--text-dim);
+            background: #0a0a0a;
         }
 
         .oc-card {
@@ -124,13 +129,60 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            background: #0a0a0a;
         }
         
         .oc-pfp {
             width: 50px; height: 50px;
             background: #333;
             border-radius: 50%;
-            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* --- MOBILE RESPONSIVE MAGIC --- */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* Stack vertically */
+            }
+
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: var(--nav-height);
+                border-right: none;
+                border-top: 1px solid var(--border);
+                background: #000000;
+                flex-direction: row; /* Horizontal menu */
+                padding: 0;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 100;
+            }
+
+            .logo { display: none; } /* Hide logo on mobile to save space */
+
+            .menu-btn {
+                padding: 0;
+                font-size: 0.8rem; /* Smaller text */
+                text-align: center;
+                flex: 1;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 20px;
+                padding-bottom: 90px; /* More space for bottom bar */
+            }
+
+            h2 { font-size: 1.8rem; }
+            
+            /* Make buttons full width on phone */
+            button.action-btn { max-width: 100%; }
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -138,57 +190,53 @@
 </head>
 <body>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR / BOTTOM NAV -->
     <div class="sidebar">
         <div class="logo">writer.</div>
+        <!-- Shortened names for mobile space -->
         <button class="menu-btn active" onclick="showSection('home')">Home</button>
-        <button class="menu-btn" onclick="showSection('dictionary')">Dictionary</button>
-        <button class="menu-btn" onclick="showSection('oc-creator')">OC Creator</button>
-        <button class="menu-btn" onclick="showSection('prompts')">Prompt Generator</button>
-        <button class="menu-btn" onclick="showSection('names')">Name Generator</button>
+        <button class="menu-btn" onclick="showSection('dictionary')">Dict.</button>
+        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
+        <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
+        <button class="menu-btn" onclick="showSection('names')">Names</button>
     </div>
 
     <!-- CONTENT -->
     <div class="main-content">
         
-        <!-- HOME SECTION -->
+        <!-- HOME -->
         <div id="home" class="section active">
-            <h2>Welcome Back.</h2>
-            <p class="subtitle">Select a tool from the left to begin writing.</p>
+            <h2>Welcome.</h2>
+            <p class="subtitle">Select a tool to begin writing.</p>
         </div>
 
-        <!-- DICTIONARY SECTION -->
+        <!-- DICTIONARY -->
         <div id="dictionary" class="section">
             <h2>Dictionary</h2>
             <p class="subtitle">Find definitions and synonyms.</p>
             <input type="text" id="dict-search" placeholder="Type a word...">
             <button class="action-btn" onclick="searchWord()">Search</button>
-            <div id="dict-result" class="result-box">Results will appear here...</div>
+            <div id="dict-result" class="result-box">Results...</div>
         </div>
 
-        <!-- OC CREATOR SECTION -->
+        <!-- OC CREATOR -->
         <div id="oc-creator" class="section">
             <h2>OC Vault</h2>
-            <p class="subtitle">Create and store your characters.</p>
+            <p class="subtitle">Create and store characters.</p>
             
             <div style="background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                 <input type="text" id="oc-name" placeholder="Name">
                 <input type="text" id="oc-role" placeholder="Role (e.g. Protagonist)">
-                <textarea id="oc-desc" rows="3" placeholder="Brief description..."></textarea>
-                <!-- Simple file input for PFP -->
-                <p style="font-size: 0.8rem; color: #666;">Profile Picture:</p>
-                <input type="file" id="oc-img-input" accept="image/*">
+                <textarea id="oc-desc" rows="3" placeholder="Description..."></textarea>
                 <button class="action-btn" onclick="saveOC()">Save Character</button>
             </div>
 
-            <div id="oc-list">
-                <!-- Saved OCs will load here -->
-            </div>
+            <div id="oc-list"></div>
         </div>
 
-        <!-- PROMPT GENERATOR SECTION -->
+        <!-- PROMPTS -->
         <div id="prompts" class="section">
-            <h2>Prompt Generator</h2>
+            <h2>Prompt Gen</h2>
             <p class="subtitle">Break your writer's block.</p>
             <select id="prompt-genre">
                 <option value="romance">Romance</option>
@@ -197,12 +245,12 @@
                 <option value="fantasy">Fantasy</option>
             </select>
             <button class="action-btn" onclick="generatePrompt()">Generate</button>
-            <div id="prompt-result" class="result-box">Your prompt will appear here...</div>
+            <div id="prompt-result" class="result-box">Prompt...</div>
         </div>
 
-        <!-- NAME GENERATOR SECTION -->
+        <!-- NAMES -->
         <div id="names" class="section">
-            <h2>Name Generator</h2>
+            <h2>Name Gen</h2>
             <p class="subtitle">Find the perfect name.</p>
             <select id="name-gender">
                 <option value="feminine">Feminine</option>
@@ -215,53 +263,47 @@
                 <option value="10">10 Names</option>
             </select>
             <button class="action-btn" onclick="generateNames()">Generate</button>
-            <div id="name-result" class="result-box">Names will appear here...</div>
+            <div id="name-result" class="result-box">Names...</div>
         </div>
 
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT -->
     <script>
-        // 1. NAVIGATION LOGIC
+        // NAVIGATION
         function showSection(sectionId) {
-            // Hide all sections
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-            
-            // Show selected
             document.getElementById(sectionId).classList.add('active');
             
-            // Highlight button (simple loop to find the button with matching text or logic)
-            // For simplicity in this demo, we won't strictly toggle the 'active' class on buttons perfectly without IDs, 
-            // but the content switching works.
+            // Highlight the correct button even if text is different (simple match)
+            event.target.classList.add('active');
         }
 
-        // 2. DICTIONARY (Simulated for now, can connect to real API later)
+        // DICTIONARY
         async function searchWord() {
             const word = document.getElementById('dict-search').value;
             const resultBox = document.getElementById('dict-result');
-            
             if(!word) return;
-
             resultBox.innerHTML = "Searching...";
-            
-            // Using a free Dictionary API
             try {
                 const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
                 const data = await response.json();
-                
                 if (data.title === "No Definitions Found") {
                     resultBox.innerHTML = "Word not found.";
                 } else {
                     const def = data[0].meanings[0].definitions[0].definition;
                     resultBox.innerHTML = `<strong>${word}</strong><br><br>${def}`;
                 }
-            } catch (error) {
-                resultBox.innerHTML = "Error fetching definition.";
-            }
+            } catch (error) { resultBox.innerHTML = "Error."; }
         }
 
-        // 3. OC CREATOR (Uses LocalStorage to "Save")
+        // OC CREATOR (Load saved OCs on start)
+        window.onload = function() {
+            const savedOCs = JSON.parse(localStorage.getItem('myOCs') || '[]');
+            savedOCs.forEach(oc => renderOCCard(oc));
+        };
+
         function saveOC() {
             const name = document.getElementById('oc-name').value;
             const role = document.getElementById('oc-role').value;
@@ -269,19 +311,13 @@
             
             if(!name) return alert("Name is required!");
 
-            // Create HTML for the new card
-            const ocList = document.getElementById('oc-list');
-            const card = document.createElement('div');
-            card.className = 'oc-card';
-            card.innerHTML = `
-                <div class="oc-pfp"></div>
-                <div>
-                    <h3 style="margin: 0;">${name}</h3>
-                    <small style="color: #888;">${role}</small>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${desc}</p>
-                </div>
-            `;
-            ocList.prepend(card); // Add to top of list
+            const newOC = { name, role, desc };
+            renderOCCard(newOC);
+
+            // SAVE TO LOCAL STORAGE
+            const currentOCs = JSON.parse(localStorage.getItem('myOCs') || '[]');
+            currentOCs.push(newOC);
+            localStorage.setItem('myOCs', JSON.stringify(currentOCs));
 
             // Clear inputs
             document.getElementById('oc-name').value = '';
@@ -289,7 +325,22 @@
             document.getElementById('oc-desc').value = '';
         }
 
-        // 4. PROMPT GENERATOR (Simple Arrays)
+        function renderOCCard(oc) {
+            const ocList = document.getElementById('oc-list');
+            const card = document.createElement('div');
+            card.className = 'oc-card';
+            card.innerHTML = `
+                <div class="oc-pfp"></div>
+                <div>
+                    <h3 style="margin: 0;">${oc.name}</h3>
+                    <small style="color: #888;">${oc.role}</small>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${oc.desc}</p>
+                </div>
+            `;
+            ocList.prepend(card);
+        }
+
+        // PROMPTS
         const prompts = {
             romance: ["They were rivals in business, but stuck in an elevator.", "She forgot her umbrella, he offered his.", "A letter meant for someone else arrives at her door."],
             horror: ["The reflection in the mirror blinked.", "The GPS led them to a road that wasn't on the map.", "Every night, the door opens exactly one inch."],
@@ -304,7 +355,7 @@
             document.getElementById('prompt-result').innerText = random;
         }
 
-        // 5. NAME GENERATOR (Simple Arrays)
+        // NAMES
         const namesDB = {
             feminine: ["Elara", "Seraphina", "Luna", "Iris", "Freya", "Nova", "Aria"],
             masculine: ["Atlas", "Orion", "Silas", "Ezra", "Felix", "Jasper", "Kai"],
@@ -315,11 +366,9 @@
             const gender = document.getElementById('name-gender').value;
             const count = parseInt(document.getElementById('name-count').value);
             const list = namesDB[gender];
-            
             let result = "";
             for(let i=0; i<count; i++) {
-                const randomName = list[Math.floor(Math.random() * list.length)];
-                result += randomName + (i < count-1 ? ", " : "");
+                result += list[Math.floor(Math.random() * list.length)] + (i < count-1 ? ", " : "");
             }
             document.getElementById('name-result').innerText = result;
         }
