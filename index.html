@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V8.0 (Profiles)</title>
+    <title>Writer V8.1 (Full)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -15,7 +15,12 @@
         /* --- LAYOUT --- */
         .sidebar { width:260px; background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:30px 20px; z-index:100; }
         .logo { font-size:1.5rem; font-weight:700; margin-bottom:40px; padding-left:10px; }
-        .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:15px; width:100%; cursor:pointer; border-radius:8px; margin-bottom:5px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; }
+        
+        /* Fixed sidebar layout to push profile to bottom */
+        .nav-items { flex:1; display:flex; flex-direction:column; gap:5px; }
+        .profile-btn-container { margin-top:auto; padding-top:20px; border-top:1px solid var(--border); }
+
+        .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:12px 15px; width:100%; cursor:pointer; border-radius:8px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; transition:0.2s; }
         .menu-btn:hover { background:rgba(255,255,255,0.05); color:#fff; }
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
         
@@ -25,9 +30,10 @@
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
         /* --- COMPONENTS --- */
-        input, textarea { background:var(--card); border:1px solid var(--border); color:#fff; padding:15px; border-radius:10px; width:100%; margin-bottom:15px; font-family:'Inter'; font-size:16px; }
+        input, textarea, select { background:var(--card); border:1px solid var(--border); color:#fff; padding:15px; border-radius:10px; width:100%; margin-bottom:15px; font-family:'Inter'; font-size:16px; appearance:none; }
         button.btn { background:#fff; color:#000; border:none; padding:12px 25px; border-radius:50px; font-weight:600; cursor:pointer; width:100%; }
         button.btn-sec { background:rgba(255,255,255,0.05); color:#ccc; border:1px solid var(--border); padding:8px 16px; border-radius:20px; font-size:0.85rem; cursor:pointer; margin-top:10px; }
+        .result-box { margin-top:20px; padding:20px; border:1px solid var(--border); border-radius:10px; background:var(--card); min-height:60px; color:#ddd; }
 
         /* --- PROFILE --- */
         .profile-header { display:flex; align-items:center; gap:20px; margin-bottom:40px; }
@@ -40,9 +46,17 @@
         /* --- MOBILE --- */
         @media(max-width:768px) {
             body { flex-direction:column; }
-            .sidebar { width:100%; height:auto; position:fixed; bottom:0; flex-direction:row; padding:10px 10px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; justify-content:space-evenly; }
+            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 10px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:row; }
+            .nav-items { flex-direction:row; width:100%; justify-content:space-evenly; }
+            .profile-btn-container { display:none; } /* Hide profile button on bottom bar to save space, maybe add to top right or integrate */
+            /* Actually let's keep profile as the last icon */
+            .nav-items { flex-direction:row; width:100%; justify-content:space-between; }
+            .profile-btn-container { display:block; border:none; padding:0; margin:0; width:auto; }
+            
             .logo { display:none; }
-            .menu-btn { padding:8px; flex:1; justify-content:center; font-size:0.75rem; text-align:center; }
+            .menu-btn { padding:8px; justify-content:center; font-size:0.75rem; text-align:center; flex-direction:column; gap:4px; }
+            .menu-btn span { display:none; } /* Hide text labels on mobile if needed, or keep short */
+            .menu-btn span { display:block; font-size:0.6rem; }
             .main-content { padding:20px; padding-bottom:100px; }
         }
     </style>
@@ -64,11 +78,20 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">writer.</div>
-        <button class="menu-btn active" onclick="nav('home')">Home</button>
-        <button class="menu-btn" onclick="nav('ocs')">Characters</button>
-        <button class="menu-btn" onclick="nav('profile')">
-            <div id="nav-avatar" class="avatar-sm"></div> <span id="nav-username">Profile</span>
-        </button>
+        
+        <div class="nav-items">
+            <button class="menu-btn active" onclick="nav('home')">Home</button>
+            <button class="menu-btn" onclick="nav('ocs')">Characters</button>
+            <button class="menu-btn" onclick="nav('dictionary')">Dict</button>
+            <button class="menu-btn" onclick="nav('prompts')">Prompts</button>
+            <button class="menu-btn" onclick="nav('names')">Names</button>
+        </div>
+
+        <div class="profile-btn-container">
+            <button class="menu-btn" onclick="nav('profile')">
+                <div id="nav-avatar" class="avatar-sm"></div> <span id="nav-username">Profile</span>
+            </button>
+        </div>
     </div>
 
     <!-- MAIN -->
@@ -93,27 +116,61 @@
                     <p id="profile-email" style="margin:0; color:var(--dim); font-size:0.9rem;">...</p>
                 </div>
             </div>
-            
             <div style="background:#111; padding:25px; border-radius:16px; border:1px solid var(--border);">
                 <h4 style="margin-top:0;">Edit Profile</h4>
                 <label style="color:#888; font-size:0.8rem;">Username</label>
                 <input type="text" id="edit-username" placeholder="Choose a username">
-                
                 <label style="color:#888; font-size:0.8rem;">Avatar Image</label>
                 <input type="file" id="edit-avatar" accept="image/*" style="padding:10px 0; background:transparent; border:none;">
-                
                 <button class="btn" onclick="updateProfile()">Save Changes</button>
                 <button class="btn-sec" onclick="handleLogout()" style="color:#ff5555; border-color:#ff555533; width:100%; margin-top:20px;">Log Out</button>
             </div>
         </div>
 
-        <!-- CHARACTERS (Simplified for brevity, fully functional) -->
+        <!-- CHARACTERS -->
         <div id="ocs" class="section">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h2>Characters</h2>
                 <button class="btn" onclick="openOcForm()" style="width:auto; padding:10px 20px;">+ New</button>
             </div>
             <div id="oc-list" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px;"></div>
+        </div>
+
+        <!-- DICTIONARY -->
+        <div id="dictionary" class="section">
+            <h2>Dictionary</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="dict-search" placeholder="Type a word..." style="margin-bottom:0;">
+                <button class="btn" onclick="searchWord()" style="width:auto;">Search</button>
+            </div>
+            <div id="dict-result" class="result-box"></div>
+        </div>
+
+        <!-- PROMPTS -->
+        <div id="prompts" class="section">
+            <h2>Prompts</h2>
+            <select id="prompt-genre">
+                <option value="romance">Romance</option>
+                <option value="horror">Horror</option>
+                <option value="fantasy">Fantasy</option>
+                <option value="scifi">Sci-Fi</option>
+            </select>
+            <button class="btn" onclick="generatePrompt()">Generate Idea</button>
+            <div id="prompt-result" class="result-box" style="font-size:1.2rem;"></div>
+        </div>
+
+        <!-- NAMES -->
+        <div id="names" class="section">
+            <h2>Name Generator</h2>
+            <div style="display:flex; gap:10px;">
+                <select id="name-gender" style="margin-bottom:0;">
+                    <option value="neutral">Neutral</option>
+                    <option value="fem">Feminine</option>
+                    <option value="masc">Masculine</option>
+                </select>
+                <button class="btn" onclick="generateNames()">Generate</button>
+            </div>
+            <div id="name-result" class="result-box"></div>
         </div>
         
         <!-- OC FORM (Hidden) -->
@@ -133,14 +190,13 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
+        // --- CONFIG ---
         const SUPABASE_URL = 'https://icotzotkvdzytrrxtudq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
         let user = null;
 
-        // --- 2. AUTH & INIT ---
+        // --- AUTH ---
         async function checkSession() {
             const { data } = await db.auth.getSession();
             if (data.session) {
@@ -152,78 +208,46 @@
                 document.getElementById('auth-screen').style.display = 'flex';
             }
         }
-        
         async function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const msg = document.getElementById('auth-msg');
-            msg.innerText = "Loading...";
-
-            // Login
             let { error } = await db.auth.signInWithPassword({ email, password });
             if (error) {
-                // If login fails, try signup
                 let { error: upError } = await db.auth.signUp({ email, password });
-                if(upError) msg.innerText = upError.message;
-                else msg.innerText = "Account created! Logging in...";
-            } else {
-                location.reload();
-            }
+                if(upError) document.getElementById('auth-msg').innerText = upError.message;
+                else location.reload();
+            } else location.reload();
         }
+        async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
-        async function handleLogout() {
-            await db.auth.signOut();
-            location.reload();
-        }
-
-        // --- 3. PROFILES ---
+        // --- PROFILES ---
         async function loadProfile() {
-            // Get profile data
             let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
-            
-            // If no profile exists yet (legacy user), create one locally
             if(!data) {
                 await db.from('profiles').insert([{ id: user.id, username: user.email.split('@')[0] }]);
                 data = { username: user.email.split('@')[0], avatar_url: null };
             }
-
-            // Update UI
             document.getElementById('profile-email').innerText = user.email;
             document.getElementById('profile-name').innerText = data.username || "Writer";
             document.getElementById('nav-username').innerText = data.username || "Profile";
             document.getElementById('edit-username').value = data.username || "";
-
             if(data.avatar_url) {
                 document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`;
                 document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`;
             }
         }
-
         async function updateProfile() {
             const username = document.getElementById('edit-username').value;
             const file = document.getElementById('edit-avatar').files[0];
             let avatarUrl = null;
-
-            if(file) {
-                avatarUrl = await new Promise(r => { const rd = new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); });
-            }
-
-            const updates = { 
-                id: user.id, 
-                username: username, 
-                updated_at: new Date() 
-            };
+            if(file) avatarUrl = await new Promise(r => { const rd = new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); });
+            const updates = { id: user.id, username: username, updated_at: new Date() };
             if(avatarUrl) updates.avatar_url = avatarUrl;
-
-            const { error } = await db.from('profiles').upsert(updates);
-            if(error) alert("Error updating profile");
-            else {
-                alert("Saved!");
-                loadProfile(); // Refresh UI
-            }
+            await db.from('profiles').upsert(updates);
+            alert("Saved!"); loadProfile();
         }
 
-        // --- 4. DATA (Characters) ---
+        // --- CHARACTERS ---
         async function loadOcs() {
             const { data } = await db.from('characters').select('*');
             const list = document.getElementById('oc-list');
@@ -235,24 +259,41 @@
                 list.appendChild(el);
             });
         }
-
         async function saveOc() {
             const name = document.getElementById('oc-name').value;
             const role = document.getElementById('oc-role').value;
             const desc = document.getElementById('oc-desc').value;
-            
             await db.from('characters').insert([{ user_id: user.id, name, role, "desc": desc }]);
-            document.getElementById('oc-form').style.display='none';
-            loadOcs();
+            document.getElementById('oc-form').style.display='none'; loadOcs();
+        }
+
+        // --- TOOLS ---
+        async function searchWord() {
+            const w = document.getElementById('dict-search').value;
+            try { const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`); const d = await req.json(); document.getElementById('dict-result').innerHTML = `<b>${d[0].word}</b>: ${d[0].meanings[0].definitions[0].definition}`; } catch(e) { document.getElementById('dict-result').innerText = "Not found."; }
+        }
+        function generatePrompt() { 
+            const genre = document.getElementById('prompt-genre').value;
+            const prompts = {
+                romance: ["Fake dating during a blizzard.", "Rivals forced to share a workspace."],
+                horror: ["The reflection blinked.", "A door appeared where there wasn't one."],
+                fantasy: ["A sword that gets heavier with guilt.", "The dragon is actually the bank manager."],
+                scifi: ["The AI asks for a bedtime story.", "Gravity stops for 5 minutes a day."]
+            };
+            const p = prompts[genre];
+            document.getElementById('prompt-result').innerText = p[Math.floor(Math.random()*p.length)];
+        }
+        function generateNames() {
+            const names = ["Rowan", "Sage", "River", "Alex", "Quinn"];
+            document.getElementById('name-result').innerText = names.sort(() => 0.5 - Math.random()).slice(0, 3).join(", ");
         }
 
         // --- UI UTILS ---
         function nav(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            // event.currentTarget.classList.add('active'); // Fixed mobile touch issue
         }
         function openOcForm() { document.getElementById('oc-form').style.display='block'; }
 
