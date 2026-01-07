@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V15.1 (Fixed)</title>
+    <title>Writer V15.2 (Full Words)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -21,7 +21,7 @@
         .profile-btn { background:transparent; border:none; cursor:pointer; width:50px; height:50px; border-radius:50%; transition:0.2s; padding:0; display:flex; align-items:center; justify-content:center; }
         .profile-btn:hover { transform:scale(1.05); background:rgba(255,255,255,0.1); }
         
-        .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:12px 15px; width:100%; cursor:pointer; border-radius:8px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; transition:0.2s; }
+        .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:12px 15px; width:100%; cursor:pointer; border-radius:8px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; transition:0.2s; white-space:nowrap; }
         .menu-btn:hover { background:rgba(255,255,255,0.05); color:#fff; }
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
         
@@ -87,38 +87,41 @@
         .stat-box small { color:#666; font-size:0.7rem; text-transform:uppercase; }
         .stat-box span { display:block; font-weight:600; font-size:0.95rem; }
 
-        /* --- MOBILE MENU OVERRIDES --- */
+        /* --- MOBILE SCROLL MENU --- */
         @media(max-width:768px) {
             body { flex-direction:column; }
             
             .sidebar {
                 width:100%; height:auto; position:fixed; bottom:0;
-                padding:8px 10px calc(8px + var(--safe-bottom));
+                padding:8px 0 calc(8px + var(--safe-bottom)); /* Zero side padding to allow full width scroll */
                 background:rgba(0,0,0,0.98); backdrop-filter:blur(12px);
                 border-top:1px solid var(--border); border-right:none;
-                display:flex; flex-direction:row; align-items:center; justify-content:center;
+                display:flex; flex-direction:row; align-items:center;
                 z-index:9000;
+                overflow-x:auto; /* Allow Horizontal Scroll */
+                white-space:nowrap;
+                -webkit-overflow-scrolling: touch;
             }
 
             .logo { display:none; }
 
             .nav-items {
-                flex-direction:row; width:auto;
-                background:#111; border-radius:999px;
-                padding:4px; border:1px solid var(--border);
-                gap:4px; flex:0;
+                display:flex; flex-direction:row; width:auto;
+                gap:8px; padding:0 15px; /* Side padding inside scroll area */
+                flex-shrink:0; /* Don't squash items */
             }
 
             .menu-btn {
-                padding:6px 12px; min-width:auto;
-                border-radius:999px; font-size:0.75rem;
-                text-align:center; flex-direction:row; justify-content:center;
-                width:auto;
+                padding:6px 14px; min-width:auto;
+                border-radius:20px; font-size:0.8rem; /* Readable size */
+                background:#111; border:1px solid var(--border);
+                width:auto; flex-shrink:0;
             }
-            .menu-btn.active { background:#fff; color:#000; }
+            .menu-btn.active { background:#fff; color:#000; font-weight:600; }
 
             .profile-btn-container {
-                margin-left:10px; margin-top:0; padding-top:0; border-top:none;
+                margin-left:auto; margin-right:15px; margin-top:0; padding-top:0; border-top:none;
+                position:sticky; right:15px; /* Keep avatar visible */
             }
             
             .main-content { padding:20px; padding-bottom:110px; }
@@ -148,10 +151,11 @@
         <div class="logo">writer.</div>
         <div class="nav-items">
             <button class="menu-btn active" onclick="nav('home')">Home</button>
-            <button class="menu-btn" onclick="nav('ocs')">Chars</button>
+            <button class="menu-btn" onclick="nav('ocs')">Characters</button>
             <button class="menu-btn" onclick="nav('tavern')">Chat</button>
-            <button class="menu-btn" onclick="nav('dictionary')">Dict</button>
+            <button class="menu-btn" onclick="nav('dictionary')">Dictionary</button>
             <button class="menu-btn" onclick="nav('prompts')">Prompts</button>
+            <button class="menu-btn" onclick="nav('names')">Names</button>
         </div>
         <div class="profile-btn-container">
             <button class="profile-btn" onclick="nav('profile')">
@@ -229,7 +233,15 @@
             <div class="result-box"><div id="prompt-result" style="font-size:1.2rem;">Select a genre...</div><button class="btn-sec" onclick="generatePrompt()">Re-Roll ↻</button></div>
         </div>
         <!-- NAMES -->
-        <!-- Note: Removed Names from nav for cleaner mobile menu, but code remains -->
+        <div id="names" class="section">
+            <h2>Name Generator</h2>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select>
+                <select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select>
+                <button class="btn" onclick="generateNames()" style="flex:2;">Generate</button>
+            </div>
+            <div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div>
+        </div>
         
         <!-- MODALS -->
         <div id="oc-form-modal">
@@ -353,7 +365,8 @@
         // --- TOOLS ---
         async function searchWord() { const w=document.getElementById('dict-search').value.toLowerCase(); const resBox=document.getElementById('dict-result'); resBox.innerHTML='<div style="color:#888">Searching...</div>'; try{const dr=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);if(dr.ok){const d=await dr.json();let s="";if(d[0].meanings[0].synonyms.length>0)s=`<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;resBox.innerHTML=`<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${s}`;return;}}catch(e){} try{const wr=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);if(!wr.ok)throw new Error("Wiki not found");const wd=await wr.json();if(wd.type==='standard'||wd.type==='disambiguation'){const img=wd.thumbnail?`<img src="${wd.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">`:'';resBox.innerHTML=`${img}<h3 style="margin:0">${wd.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${wd.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;}else{resBox.innerHTML="No distinct result found.";}}catch(e){resBox.innerHTML=`<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;} }
         async function generatePrompt() { const g=document.getElementById('prompt-genre').value; if(!promptCache[g]){document.getElementById('prompt-result').innerText="Loading...";const{data}=await db.from('prompts').select('content').eq('genre',g);if(data&&data.length>0)promptCache[g]=data.map(i=>i.content);else promptCache[g]=["No prompts."];}const l=promptCache[g];document.getElementById('prompt-result').innerText=l[Math.floor(Math.random()*l.length)]; }
-        // Note: Names tool still exists in JS, just hidden from UI nav for mobile
+        async function generateNames() { const c=parseInt(document.getElementById('name-count').value); const g=document.getElementById('name-gender').value; const r=document.getElementById('name-result'); if(!nameCache[g]){r.innerText="Loading...";const{data}=await db.from('names').select('name').eq('gender',g);if(data&&data.length>0)nameCache[g]=data.map(i=>i.name);else nameCache[g]=["No names."];}const l=nameCache[g];const s=l.sort(()=>0.5-Math.random());r.innerText=s.slice(0,c).join(", "); }
+
         function nav(id) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active')); }
         window.onload = checkSession;
     </script>
