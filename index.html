@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V10.0</title>
+    <title>Writer V11.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +16,12 @@
         .sidebar { width:260px; background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:30px 20px; z-index:100; }
         .logo { font-size:1.5rem; font-weight:700; margin-bottom:40px; padding-left:10px; }
         .nav-items { flex:1; display:flex; flex-direction:column; gap:5px; }
-        .profile-btn-container { margin-top:auto; padding-top:20px; border-top:1px solid var(--border); }
+        
+        /* CLEAN PROFILE BTN */
+        .profile-btn-container { margin-top:auto; padding-top:20px; border-top:1px solid var(--border); display:flex; justify-content:center; }
+        .profile-btn { background:transparent; border:none; cursor:pointer; width:50px; height:50px; border-radius:50%; transition:0.2s; padding:0; display:flex; align-items:center; justify-content:center; }
+        .profile-btn:hover { transform:scale(1.05); background:rgba(255,255,255,0.1); }
+        
         .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:12px 15px; width:100%; cursor:pointer; border-radius:8px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; transition:0.2s; }
         .menu-btn:hover { background:rgba(255,255,255,0.05); color:#fff; }
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
@@ -37,7 +42,7 @@
         /* --- PROFILE --- */
         .profile-header { display:flex; align-items:center; gap:20px; margin-bottom:40px; }
         .avatar-lg { width:80px; height:80px; border-radius:50%; background:#222 center/cover; border:2px solid var(--border); }
-        .avatar-sm { width:24px; height:24px; border-radius:50%; background:#333 center/cover; display:inline-block; }
+        .avatar-sm { width:40px; height:40px; border-radius:50%; background:#333 center/cover; border:1px solid var(--border); }
 
         /* --- AUTH SCREEN --- */
         #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
@@ -72,9 +77,9 @@
         /* --- MOBILE --- */
         @media(max-width:768px) {
             body { flex-direction:column; }
-            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 10px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:row; }
-            .nav-items { flex-direction:row; width:100%; justify-content:space-between; }
-            .profile-btn-container { display:block; border:none; padding:0; margin:0; width:auto; }
+            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 10px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:row; align-items:center; }
+            .nav-items { flex-direction:row; width:100%; justify-content:space-evenly; align-items:center; }
+            .profile-btn-container { display:block; border:none; padding:0; margin:0; width:auto; margin-left:10px; }
             .logo { display:none; }
             .menu-btn { padding:8px; justify-content:center; font-size:0.75rem; text-align:center; flex-direction:column; gap:4px; }
             .main-content { padding:20px; padding-bottom:100px; }
@@ -93,10 +98,7 @@
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
             
-            <!-- Login Button -->
             <button class="btn" id="login-btn" onclick="performLogin()">Log In</button>
-            
-            <!-- Signup Button (Hidden by default) -->
             <button class="btn" id="signup-btn" onclick="performSignup()" style="display:none; background:#222; color:#fff; border:1px solid #444;">Create Account</button>
             
             <p id="auth-msg" style="color:#ff5555; font-size:0.9rem; margin-top:15px; text-align:center; min-height:20px;"></p>
@@ -116,8 +118,8 @@
             <button class="menu-btn" onclick="nav('names')">Names</button>
         </div>
         <div class="profile-btn-container">
-            <button class="menu-btn" onclick="nav('profile')">
-                <div id="nav-avatar" class="avatar-sm"></div> <span id="nav-username">Profile</span>
+            <button class="profile-btn" onclick="nav('profile')">
+                <div id="nav-avatar" class="avatar-sm"></div>
             </button>
         </div>
     </div>
@@ -315,7 +317,7 @@
             const toggle = document.getElementById('auth-toggle-link');
             const msg = document.getElementById('auth-msg');
 
-            msg.innerText = ""; // Clear errors
+            msg.innerText = ""; 
 
             if(isSignupMode) {
                 title.innerText = "Join Writer.";
@@ -337,14 +339,9 @@
             const password = document.getElementById('password').value;
             const msg = document.getElementById('auth-msg');
             msg.innerText = "Logging in...";
-
             const { data, error } = await db.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                msg.innerText = error.message; // "Invalid login credentials" etc
-            } else {
-                location.reload();
-            }
+            if (error) msg.innerText = error.message; 
+            else location.reload();
         }
 
         async function performSignup() {
@@ -352,11 +349,9 @@
             const password = document.getElementById('password').value;
             const msg = document.getElementById('auth-msg');
             msg.innerText = "Creating account...";
-
             const { data, error } = await db.auth.signUp({ email, password });
-            
             if (error) {
-                msg.innerText = error.message; // "User already registered" etc
+                msg.innerText = error.message; 
             } else {
                 msg.innerText = "Success! You are logged in.";
                 setTimeout(() => location.reload(), 1000);
@@ -374,7 +369,6 @@
             }
             document.getElementById('profile-email').innerText = user.email;
             document.getElementById('profile-name').innerText = data.username || "Writer";
-            document.getElementById('nav-username').innerText = data.username || "Profile";
             document.getElementById('edit-username').value = data.username || "";
             if(data.avatar_url) {
                 document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`;
