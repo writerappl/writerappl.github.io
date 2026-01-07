@@ -3,150 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Writer V3.1</title>
+    <title>Writer V3.2 (Stable)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         /* --- CSS STYLES --- */
-        :root {
-            --bg-color: #000000;
-            --text-main: #ffffff;
-            --text-dim: #888888;
-            --border: #333333;
-            --highlight: #ffffff;
-            --nav-height: 60px;
-        }
+        :root { --bg-color: #000000; --text-main: #ffffff; --text-dim: #888888; --border: #333333; }
 
         body {
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; background-color: var(--bg-color); color: var(--text-main);
+            font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden;
         }
 
-        /* --- SIDEBAR --- */
         .sidebar {
-            width: 250px;
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            background: #000;
-            z-index: 500; /* Super high z-index to stay on top */
+            width: 250px; border-right: 1px solid var(--border); padding: 20px;
+            display: flex; flex-direction: column; flex-shrink: 0; background: #000; z-index: 500;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 40px;
-            letter-spacing: -1px;
-            color: white;
-        }
+        .logo { font-size: 1.5rem; font-weight: 600; margin-bottom: 40px; color: white; }
 
         .menu-btn {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            text-align: left;
-            padding: 15px 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-            border-radius: 8px;
+            background: none; border: none; color: var(--text-dim); text-align: left;
+            padding: 15px 10px; font-size: 1rem; cursor: pointer; border-radius: 8px;
         }
-
         .menu-btn:hover { background: #111; color: white; }
         .menu-btn.active { color: white; font-weight: 600; background: #222; }
 
-        /* --- MAIN CONTENT --- */
         .main-content {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            padding-bottom: 100px;
-            position: relative;
+            flex: 1; padding: 40px; overflow-y: auto; padding-bottom: 100px; position: relative;
         }
 
-        /* --- SECTION FIX --- */
+        /* --- THE CRITICAL FIX --- */
         .section {
-            display: none; /* Default state */
-            max-width: 900px;
-            margin: 0 auto;
-            animation: fadeIn 0.3s ease;
-            pointer-events: none; /* INVISIBLE LAYERS CAN'T BE CLICKED */
+            display: none !important; /* Force hide by default */
+            max-width: 900px; margin: 0 auto;
         }
         
         .section.active { 
-            display: block; 
-            pointer-events: auto; /* CLICKABLE WHEN VISIBLE */
+            display: block !important; /* Force show when active */
         }
 
+        /* --- UI ELEMENTS --- */
         h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; }
-        .subtitle { color: var(--text-dim); margin: 0 0 30px 0; font-weight: 300; }
+        .subtitle { color: var(--text-dim); margin: 0 0 30px 0; }
 
-        /* --- INPUTS & UI --- */
         input, select, textarea {
-            background: #111;
-            border: 1px solid var(--border);
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
-            width: 100%;
-            margin-bottom: 15px;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-            font-size: 16px;
+            background: #111; border: 1px solid var(--border); color: white;
+            padding: 14px; border-radius: 8px; width: 100%; margin-bottom: 15px;
+            font-family: 'Inter', sans-serif; box-sizing: border-box; font-size: 16px;
         }
 
         button.action-btn {
-            background: white;
-            color: black;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            max-width: 200px;
-            transition: opacity 0.2s;
+            background: white; color: black; border: none; padding: 12px 25px;
+            border-radius: 30px; cursor: pointer; font-weight: 600; width: 100%; max-width: 200px;
         }
-        button.action-btn:active { opacity: 0.7; }
 
         .result-box {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-height: 50px;
-            color: #ccc;
-            background: #0a0a0a;
-            line-height: 1.5;
+            margin-top: 20px; padding: 20px; border: 1px solid var(--border);
+            border-radius: 8px; min-height: 50px; color: #ccc; background: #0a0a0a;
         }
 
-        /* --- OC GRID LAYOUT --- */
-        .oc-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .oc-card {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: #0a0a0a;
-            cursor: pointer;
-            transition: transform 0.2s;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 250px;
-        }
-        .oc-card:hover { transform: translateY(-3px); border-color: #666; }
+        .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
         
-        .oc-card
+        .oc-card {
+            border: 1px solid var(--border); border-radius: 12px; background: #0a0a0a;
+            cursor: pointer; overflow: hidden; display: flex; flex-direction: column; height: 250px;
+        }
+        .oc-card-img { width: 100%; height: 150px; background-color: #222; background-size: cover; background-position: center; }
+        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: #111; border: 1px solid #333; border-radius: 12px;
+            width: 100%; max-width: 600px; max-height: 80vh; overflow-y: auto; position: relative;
+        }
+        .modal-header-img { width: 100%; height: 200px; background-color: #222; background-size: cover; background-position: center; }
+        .modal-body { padding: 30px; }
+        .close-btn {
+            position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); 
+            border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+                border-right: none; border-top: 1px solid var(--border); flex-direction: row; padding: 0; justify-content: space-around;
+            }
+            .logo { display: none; }
+            .menu-btn { padding: 0; font-size: 0.75rem; flex: 1; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0; }
+            .menu-btn.active { border-top: 2px solid white; background: none; }
+            .main-content { padding: 20px; padding-bottom: 90px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">writer.</div>
+        <button class="menu-btn active" onclick="showSection('home')">Home</button>
+        <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
+        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
+        <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
+        <button class="menu-btn" onclick="showSection('names')">Names</button>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="home" class="section active">
+            <h2>Dashboard</h2>
+            <p class="subtitle">Welcome back.</p>
+            <div style="background: #111; padding: 25px; border-radius: 12px; border: 1px solid #222;">
+                <h3 style="margin-top: 0; color: #888; font-size: 0.9rem;">DAILY INSPIRATION</h3>
+                <p style="font-size: 1.2rem; font-style: italic;">"There is no greater agony than bearing an untold story inside you."</p>
+            </div>
+        </div>
+
+        <div id="dictionary" class="section">
+            <h2>Dictionary</h2>
+            <input type="text" id="dict-search" placeholder="Type a word...">
+            <button class="action-btn" onclick="searchWord()">Search</button>
+            <div id="dict-result" class="result-box">Definitions...</div>
+        </div>
+
+        <div id="oc-creator" class="section">
+            <h2>OC Vault</h2>
+            <button class="ac
