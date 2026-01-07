@@ -4,80 +4,325 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writer</title>
-    
-    <!-- This loads the modern "Inter" font from Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* This removes default spacing so the black covers the whole screen */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #000000; /* Pure Black */
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden; /* Stops scrolling for a clean app feel */
+        /* --- CSS STYLES --- */
+        :root {
+            --bg-color: #000000;
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --border: #333333;
+            --accent: #ffffff;
         }
 
-        /* Centers everything in the middle of the screen */
-        .container {
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR MENU */
+        .sidebar {
+            width: 250px;
+            border-right: 1px solid var(--border);
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
         }
 
-        /* The Main Logo Text */
-        h1 {
-            font-size: 4rem; /* Big text */
+        .logo {
+            font-size: 1.5rem;
             font-weight: 600;
-            letter-spacing: -2px; /* Tight spacing looks modern */
-            margin: 0;
-            background: linear-gradient(to bottom, #ffffff, #666666);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent; /* Makes the text look metallic/gradient */
+            margin-bottom: 40px;
+            letter-spacing: -1px;
         }
 
-        /* The subtitle */
-        p {
-            font-size: 1.2rem;
-            color: #888888; /* Grey text is more elegant than white */
-            margin-top: 10px;
-            font-weight: 300;
-        }
-
-        /* The "Get Started" Button */
-        .button {
-            margin-top: 40px;
-            padding: 12px 30px;
-            border: 1px solid #333;
-            border-radius: 30px;
-            color: white;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .button:hover {
-            background-color: white;
-            color: black;
-            border-color: white;
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            text-align: left;
+            padding: 10px 0;
+            font-size: 1rem;
             cursor: pointer;
+            transition: color 0.2s;
+            font-family: 'Inter', sans-serif;
         }
+
+        .menu-btn:hover, .menu-btn.active {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .section {
+            display: none; /* Hides all sections by default */
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block; /* Shows the active section */
+        }
+
+        h2 { font-weight: 600; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: var(--text-dim); margin-bottom: 30px; }
+
+        /* INPUTS & BUTTONS */
+        input, select, textarea {
+            background: #111;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 15px;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        button.action-btn {
+            background: white;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        button.action-btn:hover { background: #ddd; }
+
+        /* TOOL SPECIFIC STYLES */
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 50px;
+            color: var(--text-dim);
+        }
+
+        .oc-card {
+            border: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .oc-pfp {
+            width: 50px; height: 50px;
+            background: #333;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>writer.</h1>
-        <p>The universe for your stories.</p>
-        <a href="#" class="button">Enter App</a>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo">writer.</div>
+        <button class="menu-btn active" onclick="showSection('home')">Home</button>
+        <button class="menu-btn" onclick="showSection('dictionary')">Dictionary</button>
+        <button class="menu-btn" onclick="showSection('oc-creator')">OC Creator</button>
+        <button class="menu-btn" onclick="showSection('prompts')">Prompt Generator</button>
+        <button class="menu-btn" onclick="showSection('names')">Name Generator</button>
     </div>
 
+    <!-- CONTENT -->
+    <div class="main-content">
+        
+        <!-- HOME SECTION -->
+        <div id="home" class="section active">
+            <h2>Welcome Back.</h2>
+            <p class="subtitle">Select a tool from the left to begin writing.</p>
+        </div>
+
+        <!-- DICTIONARY SECTION -->
+        <div id="dictionary" class="section">
+            <h2>Dictionary</h2>
+            <p class="subtitle">Find definitions and synonyms.</p>
+            <input type="text" id="dict-search" placeholder="Type a word...">
+            <button class="action-btn" onclick="searchWord()">Search</button>
+            <div id="dict-result" class="result-box">Results will appear here...</div>
+        </div>
+
+        <!-- OC CREATOR SECTION -->
+        <div id="oc-creator" class="section">
+            <h2>OC Vault</h2>
+            <p class="subtitle">Create and store your characters.</p>
+            
+            <div style="background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <input type="text" id="oc-name" placeholder="Name">
+                <input type="text" id="oc-role" placeholder="Role (e.g. Protagonist)">
+                <textarea id="oc-desc" rows="3" placeholder="Brief description..."></textarea>
+                <!-- Simple file input for PFP -->
+                <p style="font-size: 0.8rem; color: #666;">Profile Picture:</p>
+                <input type="file" id="oc-img-input" accept="image/*">
+                <button class="action-btn" onclick="saveOC()">Save Character</button>
+            </div>
+
+            <div id="oc-list">
+                <!-- Saved OCs will load here -->
+            </div>
+        </div>
+
+        <!-- PROMPT GENERATOR SECTION -->
+        <div id="prompts" class="section">
+            <h2>Prompt Generator</h2>
+            <p class="subtitle">Break your writer's block.</p>
+            <select id="prompt-genre">
+                <option value="romance">Romance</option>
+                <option value="horror">Horror</option>
+                <option value="comedy">Comedy</option>
+                <option value="fantasy">Fantasy</option>
+            </select>
+            <button class="action-btn" onclick="generatePrompt()">Generate</button>
+            <div id="prompt-result" class="result-box">Your prompt will appear here...</div>
+        </div>
+
+        <!-- NAME GENERATOR SECTION -->
+        <div id="names" class="section">
+            <h2>Name Generator</h2>
+            <p class="subtitle">Find the perfect name.</p>
+            <select id="name-gender">
+                <option value="feminine">Feminine</option>
+                <option value="masculine">Masculine</option>
+                <option value="neutral">Neutral</option>
+            </select>
+            <select id="name-count">
+                <option value="1">1 Name</option>
+                <option value="5">5 Names</option>
+                <option value="10">10 Names</option>
+            </select>
+            <button class="action-btn" onclick="generateNames()">Generate</button>
+            <div id="name-result" class="result-box">Names will appear here...</div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. NAVIGATION LOGIC
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Highlight button (simple loop to find the button with matching text or logic)
+            // For simplicity in this demo, we won't strictly toggle the 'active' class on buttons perfectly without IDs, 
+            // but the content switching works.
+        }
+
+        // 2. DICTIONARY (Simulated for now, can connect to real API later)
+        async function searchWord() {
+            const word = document.getElementById('dict-search').value;
+            const resultBox = document.getElementById('dict-result');
+            
+            if(!word) return;
+
+            resultBox.innerHTML = "Searching...";
+            
+            // Using a free Dictionary API
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                const data = await response.json();
+                
+                if (data.title === "No Definitions Found") {
+                    resultBox.innerHTML = "Word not found.";
+                } else {
+                    const def = data[0].meanings[0].definitions[0].definition;
+                    resultBox.innerHTML = `<strong>${word}</strong><br><br>${def}`;
+                }
+            } catch (error) {
+                resultBox.innerHTML = "Error fetching definition.";
+            }
+        }
+
+        // 3. OC CREATOR (Uses LocalStorage to "Save")
+        function saveOC() {
+            const name = document.getElementById('oc-name').value;
+            const role = document.getElementById('oc-role').value;
+            const desc = document.getElementById('oc-desc').value;
+            
+            if(!name) return alert("Name is required!");
+
+            // Create HTML for the new card
+            const ocList = document.getElementById('oc-list');
+            const card = document.createElement('div');
+            card.className = 'oc-card';
+            card.innerHTML = `
+                <div class="oc-pfp"></div>
+                <div>
+                    <h3 style="margin: 0;">${name}</h3>
+                    <small style="color: #888;">${role}</small>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${desc}</p>
+                </div>
+            `;
+            ocList.prepend(card); // Add to top of list
+
+            // Clear inputs
+            document.getElementById('oc-name').value = '';
+            document.getElementById('oc-role').value = '';
+            document.getElementById('oc-desc').value = '';
+        }
+
+        // 4. PROMPT GENERATOR (Simple Arrays)
+        const prompts = {
+            romance: ["They were rivals in business, but stuck in an elevator.", "She forgot her umbrella, he offered his.", "A letter meant for someone else arrives at her door."],
+            horror: ["The reflection in the mirror blinked.", "The GPS led them to a road that wasn't on the map.", "Every night, the door opens exactly one inch."],
+            comedy: ["A wizard tries to live a normal life as an accountant.", "He accidentally joined a cult thinking it was a yoga class.", "Her cat started talking, but only complains about the food."],
+            fantasy: ["The sword was too heavy for the hero, but light for the baker.", "Dragons are actually just very big, scaly pigeons.", "The king's crown was stolen by a gust of wind."]
+        };
+
+        function generatePrompt() {
+            const genre = document.getElementById('prompt-genre').value;
+            const list = prompts[genre];
+            const random = list[Math.floor(Math.random() * list.length)];
+            document.getElementById('prompt-result').innerText = random;
+        }
+
+        // 5. NAME GENERATOR (Simple Arrays)
+        const namesDB = {
+            feminine: ["Elara", "Seraphina", "Luna", "Iris", "Freya", "Nova", "Aria"],
+            masculine: ["Atlas", "Orion", "Silas", "Ezra", "Felix", "Jasper", "Kai"],
+            neutral: ["Rowan", "Sage", "River", "Phoenix", "Quinn", "Alex", "Jordan"]
+        };
+
+        function generateNames() {
+            const gender = document.getElementById('name-gender').value;
+            const count = parseInt(document.getElementById('name-count').value);
+            const list = namesDB[gender];
+            
+            let result = "";
+            for(let i=0; i<count; i++) {
+                const randomName = list[Math.floor(Math.random() * list.length)];
+                result += randomName + (i < count-1 ? ", " : "");
+            }
+            document.getElementById('name-result').innerText = result;
+        }
+    </script>
 </body>
 </html>
