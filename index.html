@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V12.0 (Smart DB)</title>
+    <title>Writer V13.0 (Wiki)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -73,7 +73,14 @@
         /* --- MOBILE --- */
         @media(max-width:768px) {
             body { flex-direction:column; }
-            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 20px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:column; align-items:center; z-index:9000; }
+            .sidebar { 
+                width:100%; height:auto; position:fixed; bottom:0; 
+                padding:10px 20px calc(10px + var(--safe-bottom)); 
+                background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); 
+                border-top:1px solid var(--border); border-right:none; 
+                display:flex; flex-direction:column; align-items:center; 
+                z-index:9000; 
+            }
             .nav-items { flex-direction:row; width:100%; justify-content:space-between; margin-bottom:6px; }
             .profile-btn-container { border:none; padding:0; margin:0; width:100%; display:flex; justify-content:center; }
             .logo { display:none; }
@@ -89,16 +96,12 @@
     <div id="auth-screen">
         <h1 style="margin-bottom:10px;">writer.</h1>
         <p style="color:#888; margin-bottom:30px;" id="auth-subtitle">Login to access your world.</p>
-        
         <div style="width:100%; max-width:320px;">
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
-            
             <button class="btn" id="login-btn" onclick="performLogin()">Log In</button>
             <button class="btn" id="signup-btn" onclick="performSignup()" style="display:none; background:#222; color:#fff; border:1px solid #444;">Create Account</button>
-            
             <p id="auth-msg" style="color:#ff5555; font-size:0.9rem; margin-top:15px; text-align:center; min-height:20px;"></p>
-            
             <div id="auth-toggle-link" class="auth-toggle" onclick="toggleAuthMode()">Need an account? Sign Up</div>
         </div>
     </div>
@@ -122,7 +125,6 @@
 
     <!-- MAIN -->
     <div class="main-content">
-        
         <!-- HOME -->
         <div id="home" class="section active">
             <h2>Dashboard</h2>
@@ -131,7 +133,6 @@
                 <small style="color:var(--dim);">— Stephen King</small>
             </div>
         </div>
-
         <!-- PROFILE -->
         <div id="profile" class="section">
             <h2>Your Profile</h2>
@@ -152,7 +153,6 @@
                 <button class="btn-sec" onclick="handleLogout()" style="color:#ff5555; border-color:#ff555533; width:100%; margin-top:20px;">Log Out</button>
             </div>
         </div>
-
         <!-- CHARACTERS -->
         <div id="ocs" class="section">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
@@ -161,17 +161,15 @@
             </div>
             <div id="oc-list" class="oc-grid"></div>
         </div>
-
         <!-- DICTIONARY -->
         <div id="dictionary" class="section">
-            <h2>Dictionary</h2>
+            <h2>Wiki Dictionary</h2>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="dict-search" placeholder="Type a word (e.g. 'Love' or 'Instagram')..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchWord()">
+                <input type="text" id="dict-search" placeholder="Type a concept (e.g. 'Cyberpunk', 'Instagram')..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchWord()">
                 <button class="btn" onclick="searchWord()" style="width:auto;">Search</button>
             </div>
             <div id="dict-result" class="result-box"></div>
         </div>
-
         <!-- PROMPTS -->
         <div id="prompts" class="section">
             <h2>Prompts</h2>
@@ -189,7 +187,6 @@
                 <button class="btn-sec" onclick="generatePrompt()">Re-Roll ↻</button>
             </div>
         </div>
-
         <!-- NAMES -->
         <div id="names" class="section">
             <h2>Name Generator</h2>
@@ -212,7 +209,7 @@
             </div>
         </div>
         
-        <!-- VAST OC FORM (Create/Edit) -->
+        <!-- VAST OC FORM -->
         <div id="oc-form-modal">
             <div class="form-container">
                 <h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2>
@@ -241,7 +238,6 @@
                 </div>
             </div>
         </div>
-
         <!-- OC VIEW MODAL -->
         <div id="oc-view-modal">
             <div class="view-content">
@@ -268,31 +264,22 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
         const SUPABASE_URL = 'https://icotzotkvdzytrrxtudq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let user = null;
-        let currentOc = null; 
-        let isSignupMode = false;
-        
-        // Cache variables to store fetched DB items
-        let promptCache = {}; 
-        let nameCache = {};
+        let user = null; let currentOc = null; let isSignupMode = false;
+        let promptCache = {}; let nameCache = {};
 
         async function checkSession() {
             const { data } = await db.auth.getSession();
             if (data.session) {
                 user = data.session.user;
                 document.getElementById('auth-screen').style.display = 'none';
-                loadProfile();
-                loadOcs();
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
+                loadProfile(); loadOcs();
+            } else { document.getElementById('auth-screen').style.display = 'flex'; }
         }
         function toggleAuthMode() {
             isSignupMode = !isSignupMode;
@@ -301,48 +288,36 @@
             const logBtn = document.getElementById('login-btn');
             const signBtn = document.getElementById('signup-btn');
             const toggle = document.getElementById('auth-toggle-link');
-            const msg = document.getElementById('auth-msg');
-            msg.innerText = ""; 
+            document.getElementById('auth-msg').innerText = ""; 
             if(isSignupMode) {
-                title.innerText = "Join Writer.";
-                sub.innerText = "Create your account.";
-                logBtn.style.display = 'none';
-                signBtn.style.display = 'block';
+                title.innerText = "Join Writer."; sub.innerText = "Create your account.";
+                logBtn.style.display = 'none'; signBtn.style.display = 'block';
                 toggle.innerText = "Already have an account? Log In";
             } else {
-                title.innerText = "writer.";
-                sub.innerText = "Login to access your world.";
-                logBtn.style.display = 'block';
-                signBtn.style.display = 'none';
+                title.innerText = "writer."; sub.innerText = "Login to access your world.";
+                logBtn.style.display = 'block'; signBtn.style.display = 'none';
                 toggle.innerText = "Need an account? Sign Up";
             }
         }
         async function performLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const msg = document.getElementById('auth-msg');
-            msg.innerText = "Logging in...";
+            const msg = document.getElementById('auth-msg'); msg.innerText = "Logging in...";
             const { data, error } = await db.auth.signInWithPassword({ email, password });
-            if (error) msg.innerText = error.message; 
-            else location.reload();
+            if (error) msg.innerText = error.message; else location.reload();
         }
         async function performSignup() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const msg = document.getElementById('auth-msg');
-            msg.innerText = "Creating account...";
+            const msg = document.getElementById('auth-msg'); msg.innerText = "Creating account...";
             const { data, error } = await db.auth.signUp({ email, password });
-            if (error) msg.innerText = error.message; 
-            else { msg.innerText = "Success! You are logged in."; setTimeout(() => location.reload(), 1000); }
+            if (error) msg.innerText = error.message; else { msg.innerText = "Success! You are logged in."; setTimeout(() => location.reload(), 1000); }
         }
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
         async function loadProfile() {
             let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
-            if(!data) {
-                await db.from('profiles').insert([{ id: user.id, username: user.email.split('@')[0] }]);
-                data = { username: user.email.split('@')[0], avatar_url: null };
-            }
+            if(!data) { await db.from('profiles').insert([{ id: user.id, username: user.email.split('@')[0] }]); data = { username: user.email.split('@')[0], avatar_url: null }; }
             document.getElementById('profile-email').innerText = user.email;
             document.getElementById('profile-name').innerText = data.username || "Writer";
             document.getElementById('edit-username').value = data.username || "";
@@ -367,9 +342,7 @@
             const list = document.getElementById('oc-list');
             list.innerHTML = "";
             (data||[]).forEach(oc => {
-                const el = document.createElement('div');
-                el.className = 'oc-card';
-                el.onclick = () => openViewModal(oc);
+                const el = document.createElement('div'); el.className = 'oc-card'; el.onclick = () => openViewModal(oc);
                 const bg = oc.image ? `background-image: url('${oc.image}')` : `background-color: #222`;
                 el.innerHTML = `<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role || 'No Role'}</small></div>`;
                 list.appendChild(el);
@@ -386,36 +359,27 @@
             document.getElementById('view-personality').innerText = oc.personality || "No personality details.";
             document.getElementById('view-lore').innerText = oc.lore || "No backstory logged.";
             const imgHeader = document.getElementById('view-img');
-            if(oc.image) { imgHeader.style.backgroundImage = `url('${oc.image}')`; imgHeader.style.display = 'block'; } 
-            else { imgHeader.style.display = 'none'; }
+            if(oc.image) { imgHeader.style.backgroundImage = `url('${oc.image}')`; imgHeader.style.display = 'block'; } else { imgHeader.style.display = 'none'; }
             document.getElementById('oc-view-modal').style.display = 'flex';
         }
         function openOcForm(isEdit = false) {
             document.getElementById('oc-form-modal').style.display = 'block';
             if(isEdit && currentOc) {
-                document.getElementById('form-title').innerText = "Edit Character";
-                document.getElementById('form-id').value = currentOc.id;
-                document.getElementById('form-name').value = currentOc.name;
-                document.getElementById('form-role').value = currentOc.role;
-                document.getElementById('form-age').value = currentOc.age;
-                document.getElementById('form-gender').value = currentOc.gender;
-                document.getElementById('form-desc').value = currentOc.desc;
-                document.getElementById('form-personality').value = currentOc.personality;
-                document.getElementById('form-goals').value = currentOc.goals;
-                document.getElementById('form-lore').value = currentOc.lore;
+                document.getElementById('form-title').innerText = "Edit Character"; document.getElementById('form-id').value = currentOc.id;
+                document.getElementById('form-name').value = currentOc.name; document.getElementById('form-role').value = currentOc.role;
+                document.getElementById('form-age').value = currentOc.age; document.getElementById('form-gender').value = currentOc.gender;
+                document.getElementById('form-desc').value = currentOc.desc; document.getElementById('form-personality').value = currentOc.personality;
+                document.getElementById('form-goals').value = currentOc.goals; document.getElementById('form-lore').value = currentOc.lore;
             } else {
-                document.getElementById('form-title').innerText = "New Character";
-                document.getElementById('form-id').value = "";
+                document.getElementById('form-title').innerText = "New Character"; document.getElementById('form-id').value = "";
                 document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i => i.value = "");
             }
         }
         function editOcFromView() { document.getElementById('oc-view-modal').style.display = 'none'; openOcForm(true); }
         async function saveOc() {
-            const id = document.getElementById('form-id').value;
-            const name = document.getElementById('form-name').value;
+            const id = document.getElementById('form-id').value; const name = document.getElementById('form-name').value;
             if(!name) return alert("Name is required");
-            const file = document.getElementById('form-image').files[0];
-            let imageBase64 = null;
+            const file = document.getElementById('form-image').files[0]; let imageBase64 = null;
             if(file) imageBase64 = await new Promise(r => { const rd = new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); });
             const ocData = {
                 user_id: user.id, name: name, role: document.getElementById('form-role').value,
@@ -424,85 +388,68 @@
                 goals: document.getElementById('form-goals').value, lore: document.getElementById('form-lore').value
             };
             if(imageBase64) ocData.image = imageBase64;
-            if(id) await db.from('characters').update(ocData).eq('id', id);
-            else await db.from('characters').insert([ocData]);
-            document.getElementById('oc-form-modal').style.display='none';
-            loadOcs();
+            if(id) await db.from('characters').update(ocData).eq('id', id); else await db.from('characters').insert([ocData]);
+            document.getElementById('oc-form-modal').style.display='none'; loadOcs();
         }
         async function deleteOc() {
             if(!confirm("Delete this character?")) return;
             await db.from('characters').delete().eq('id', currentOc.id);
-            document.getElementById('oc-view-modal').style.display='none';
-            loadOcs();
+            document.getElementById('oc-view-modal').style.display='none'; loadOcs();
         }
 
-        // --- NEW SMART TOOLS ---
+        // --- NEW WIKI DICTIONARY ---
         async function searchWord() {
             const w = document.getElementById('dict-search').value;
             const resBox = document.getElementById('dict-result');
-            resBox.innerHTML = "Searching...";
+            resBox.innerHTML = '<div style="color:#888">Searching the infinite library...</div>';
             
-            // 1. Try Dictionary API
-            try { 
-                const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`); 
+            try {
+                // Always fetch from Wikipedia Summary API
+                const req = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);
                 if(!req.ok) throw new Error("Not found");
-                const d = await req.json(); 
-                let syns = "";
-                if(d[0].meanings[0].synonyms.length > 0) syns = `<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;
-                resBox.innerHTML = `<h3 style="margin:0">${d[0].word}</h3><p>${d[0].meanings[0].definitions[0].definition}</p>${syns}`; 
-            } catch(e) { 
-                // 2. Fallback to Wikipedia
-                try {
-                    const wikiReq = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);
-                    if(!wikiReq.ok) throw new Error("Wiki Not found");
-                    const wikiData = await wikiReq.json();
-                    if(wikiData.type === "standard") {
-                        resBox.innerHTML = `<h3 style="margin:0">${wikiData.title} <small style="font-size:0.7rem; color:#888; border:1px solid #444; padding:2px 5px; border-radius:4px;">WIKIPEDIA</small></h3><p>${wikiData.extract}</p>`;
-                    } else {
-                        resBox.innerText = "Word not found in Dictionary or Wikipedia."; 
-                    }
-                } catch(err) {
-                    resBox.innerText = "Word not found."; 
+                const data = await req.json();
+                
+                if (data.type === 'standard' || data.type === 'disambiguation') {
+                    // Show Thumbnail if available
+                    const img = data.thumbnail ? `<img src="${data.thumbnail.source}" style="float:right; width:60px; height:60px; border-radius:6px; object-fit:cover; margin-left:10px; border:1px solid #333;">` : '';
+                    resBox.innerHTML = `
+                        ${img}
+                        <h3 style="margin:0">${data.title}</h3>
+                        <p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${data.extract}</p>
+                        <div style="clear:both;"></div>
+                        <small style="color:#666">Source: Wikipedia</small>
+                    `;
+                } else {
+                     resBox.innerHTML = "No distinct result found.";
                 }
+            } catch(e) {
+                resBox.innerHTML = `<span style="color:#ff5555">"${w}" not found in the archives.</span>`;
             }
         }
 
+        // --- DB TOOLS ---
         async function generatePrompt() { 
             const genre = document.getElementById('prompt-genre').value;
-            // 1. Check if we have cached this genre yet
             if(!promptCache[genre]) {
                 document.getElementById('prompt-result').innerText = "Loading library...";
                 const { data } = await db.from('prompts').select('content').eq('genre', genre);
-                if(data && data.length > 0) {
-                    promptCache[genre] = data.map(i => i.content);
-                } else {
-                    promptCache[genre] = ["No prompts found in database for this genre."];
-                }
+                if(data && data.length > 0) promptCache[genre] = data.map(i => i.content);
+                else promptCache[genre] = ["No prompts found in database for this genre."];
             }
-            // 2. Pick random from cache
             const list = promptCache[genre];
-            const randomPrompt = list[Math.floor(Math.random() * list.length)];
-            document.getElementById('prompt-result').innerText = randomPrompt;
+            document.getElementById('prompt-result').innerText = list[Math.floor(Math.random() * list.length)];
         }
-
         async function generateNames() {
             const count = parseInt(document.getElementById('name-count').value);
             const gender = document.getElementById('name-gender').value;
             const resBox = document.getElementById('name-result');
-            
-            // 1. Check cache
             if(!nameCache[gender]) {
                 resBox.innerText = "Loading names...";
                 const { data } = await db.from('names').select('name').eq('gender', gender);
-                 if(data && data.length > 0) {
-                    nameCache[gender] = data.map(i => i.name);
-                } else {
-                    nameCache[gender] = ["No names in DB."];
-                }
+                 if(data && data.length > 0) nameCache[gender] = data.map(i => i.name);
+                else nameCache[gender] = ["No names in DB."];
             }
-            // 2. Pick randoms
             const list = nameCache[gender];
-            // Shuffle and pick 'count' items
             const shuffled = list.sort(() => 0.5 - Math.random());
             resBox.innerText = shuffled.slice(0, count).join(", ");
         }
