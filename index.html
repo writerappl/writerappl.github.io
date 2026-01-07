@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>writer v6.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Writer V6.4 (Click Fix)</title>
     
     <!-- FONTS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         /* --- RESET & VARIABLES --- */
@@ -23,7 +23,8 @@
             --border: rgba(255, 255, 255, 0.1); 
             --border-hover: rgba(255, 255, 255, 0.3);
             --accent: #ffffff;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition: all 0.2s ease;
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px); /* Fallback 20px */
         }
 
         body {
@@ -31,6 +32,7 @@
             background-color: var(--bg-color); color: var(--text-main);
             font-family: 'Inter', sans-serif;
             display: flex; height: 100vh; width: 100vw; overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* --- SIDEBAR --- */
@@ -38,140 +40,146 @@
             width: 260px; height: 100%; background: var(--sidebar-bg);
             border-right: 1px solid var(--border); 
             display: flex; flex-direction: column;
-            padding: 30px 20px; flex-shrink: 0; z-index: 100;
+            padding: 30px 20px; flex-shrink: 0; 
+            z-index: 999999; /* MAXIMUM LAYER */
             box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+            position: relative; /* Ensure clicking works */
         }
 
         .logo { 
-            font-family: 'Playfair Display', serif; 
-            font-size: 1.8rem; font-weight: 600; 
+            font-size: 1.5rem; font-weight: 700; 
             margin-bottom: 50px; color: white; letter-spacing: -0.5px;
             padding-left: 10px;
         }
 
         .menu-btn {
             background: transparent; border: none; color: var(--text-dim);
-            text-align: left; padding: 12px 15px; font-size: 0.95rem; font-weight: 500;
+            text-align: left; padding: 15px; font-size: 0.95rem; font-weight: 500;
             cursor: pointer; border-radius: 8px; margin-bottom: 5px; 
             display: block; width: 100%; transition: var(--transition);
+            touch-action: manipulation; /* DISABLE DOUBLE TAP ZOOM */
+            pointer-events: auto; /* FORCE CLICKS */
         }
-        .menu-btn:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        .menu-btn:hover { background: rgba(255,255,255,0.05); color: white; }
         .menu-btn.active { background: rgba(255,255,255,0.1); color: white; font-weight: 600; }
 
         /* --- MAIN CONTENT --- */
         .main-content {
             flex-grow: 1; height: 100%; overflow-y: auto; padding: 50px;
             position: relative; z-index: 50;
-            /* Scrollbar styling */
             scrollbar-width: thin; scrollbar-color: #333 #000;
         }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
+        
         .section { 
-            display: none; max-width: 800px; margin: 0 auto; 
-            animation: fadeIn 0.4s ease forwards;
+            display: none; max-width: 900px; margin: 0 auto; 
+            animation: fadeIn 0.3s ease forwards;
         }
         .section.active { display: block !important; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- UI ELEMENTS --- */
-        h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; letter-spacing: -1px; }
-        .subtitle { color: var(--text-dim); margin-bottom: 40px; font-weight: 300; }
+        h2 { font-weight: 700; font-size: 2rem; margin: 0 0 10px 0; letter-spacing: -1px; }
+        .subtitle { color: var(--text-dim); margin-bottom: 40px; font-weight: 400; font-size: 1rem; }
         
         input, select, textarea {
             background: var(--card-bg); 
             border: 1px solid var(--border); color: white;
             padding: 16px; border-radius: 10px; width: 100%; margin-bottom: 20px;
-            font-family: 'Inter', sans-serif; font-size: 16px;
-            transition: var(--transition);
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--accent); background: #111;
-            box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+            font-family: 'Inter', sans-serif; font-size: 16px; 
         }
 
         button.action-btn {
             background: white; color: black; border: none; padding: 14px 28px;
-            border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 0.95rem;
-            transition: var(--transition); display: inline-block;
+            border-radius: 50px; cursor: pointer; font-weight: 600; 
+            touch-action: manipulation;
         }
-        button.action-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
-        button.action-btn:active { transform: translateY(0); }
-
+        
         button.secondary-btn {
             background: rgba(255,255,255,0.05); color: #ccc; 
             border: 1px solid var(--border); padding: 8px 16px;
             border-radius: 20px; cursor: pointer; font-size: 0.85rem; margin-top: 15px;
-            transition: var(--transition);
+            touch-action: manipulation;
         }
-        button.secondary-btn:hover { border-color: white; color: white; background: rgba(255,255,255,0.1); }
 
         .result-box {
             margin-top: 30px; padding: 30px; 
             border: 1px solid var(--border); border-radius: 12px; 
             color: #ddd; background: var(--card-bg); min-height: 80px; 
-            position: relative; line-height: 1.6;
         }
 
         /* --- OC GRID --- */
-        .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
         .oc-card {
             border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg);
-            cursor: pointer; overflow: hidden; height: 280px; display: flex; flex-direction: column;
-            transition: var(--transition);
+            cursor: pointer; overflow: hidden; height: 260px; display: flex; flex-direction: column;
+            position: relative;
         }
-        .oc-card:hover { transform: translateY(-5px); border-color: var(--border-hover); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .oc-card-img { height: 160px; background: #1a1a1a center/cover; transition: transform 0.5s ease; }
-        .oc-card:hover .oc-card-img { transform: scale(1.05); }
-        
-        .oc-card-info { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border); }
-        .oc-card h3 { margin: 0; font-size: 1.1rem; font-weight: 500; }
-        .oc-card small { color: #666; margin-top: 5px; display: block; }
+        .oc-card-img { height: 150px; background: #1a1a1a center/cover; }
+        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border); }
+        .oc-card h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+        .oc-card small { color: #666; margin-top: 4px; display: block; font-weight: 400; font-size: 0.85rem; }
 
         /* --- MODAL --- */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 9999; 
+            background: rgba(0,0,0,0.85); z-index: 9999999; 
             justify-content: center; align-items: center; padding: 20px;
-            backdrop-filter: blur(8px); /* Blur effect */
+            backdrop-filter: blur(5px);
         }
         .modal-content {
             background: #0a0a0a; border: 1px solid #333; border-radius: 16px;
             width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; 
-            position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative;
         }
-        .modal-header-img { height: 250px; background: #222 center/cover; }
-        .modal-body { padding: 40px; }
+        .modal-header-img { height: 200px; background: #222 center/cover; }
+        .modal-body { padding: 30px; }
         .close-btn {
-            position: absolute; top: 20px; right: 20px; width: 36px; height: 36px;
+            position: absolute; top: 15px; right: 15px; width: 32px; height: 32px;
             background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50%; cursor: pointer; font-size: 20px; transition: var(--transition);
+            border-radius: 50%; cursor: pointer; font-size: 18px; 
             display: flex; align-items: center; justify-content: center;
         }
-        .close-btn:hover { background: white; color: black; }
 
-        /* --- MOBILE LAYOUT --- */
+        /* --- MOBILE FIXES --- */
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .main-content { padding: 25px; padding-bottom: 100px; width: 100%; }
+            
+            .main-content { 
+                padding: 20px; 
+                padding-bottom: 120px; /* EXTRA SPACE FOR MENU */
+                width: 100%; 
+            }
+
             .sidebar {
-                width: 100%; height: 70px; position: fixed; bottom: 0; left: 0;
-                flex-direction: row; justify-content: space-around; padding: 0;
-                border-right: none; border-top: 1px solid var(--border); z-index: 5000;
-                background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+                width: 100%; 
+                /* Height includes safe area + button height */
+                height: auto;
+                min-height: 70px;
+                position: fixed; 
+                bottom: 0; left: 0;
+                flex-direction: row; 
+                justify-content: space-evenly; /* Even spacing */
+                align-items: center;
+                /* PADDING BOTTOM USES SAFE AREA VARIABLE */
+                padding: 10px 10px calc(10px + var(--safe-area-bottom)) 10px;
+                border-right: none; 
+                border-top: 1px solid var(--border); 
+                background: #080808; /* Solid color to block clicks behind */
             }
+
             .logo { display: none; }
+            
             .menu-btn { 
-                padding: 0; margin: 0; height: 100%; 
+                padding: 10px; margin: 0; 
+                height: auto; 
                 display: flex; align-items: center; justify-content: center; 
-                font-size: 0.8rem; text-align: center; border-radius: 0; flex: 1;
+                font-size: 0.75rem; text-align: center; border-radius: 8px; flex: 1;
             }
-            .menu-btn:hover { transform: none; }
-            .menu-btn.active { border-top: 2px solid white; background: transparent; }
+            .menu-btn.active { background: #222; }
+
+            /* Modal adjustments */
+            .modal-content { width: 95%; }
         }
     </style>
 </head>
@@ -180,9 +188,9 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo">writer.</div>
-        <button class="menu-btn active" onclick="showSection('home')">Dashboard</button>
-        <button class="menu-btn" onclick="showSection('dictionary')">Dictionary</button>
-        <button class="menu-btn" onclick="showSection('oc-creator')">Characters</button>
+        <button class="menu-btn active" onclick="showSection('home')">Dash</button>
+        <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
+        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
         <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
         <button class="menu-btn" onclick="showSection('names')">Names</button>
     </div>
@@ -193,58 +201,59 @@
         <!-- HOME -->
         <div id="home" class="section active">
             <h2>Dashboard</h2>
-            <p class="subtitle">Welcome back to your workspace.</p>
-            <div style="background: linear-gradient(145deg, #111, #0a0a0a); padding: 40px; border-radius: 16px; border: 1px solid var(--border);">
-                <h3 style="margin:0 0 20px; color: var(--text-dim); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Daily Inspiration</h3>
-                <p id="daily-quote-text" style="font-family: 'Playfair Display', serif; font-size: 1.8rem; line-height: 1.4; margin: 0 0 20px;">"There is no greater agony than bearing an untold story inside you."</p>
-                <small id="daily-quote-author" style="color: var(--text-dim); font-size: 1rem;">— Maya Angelou</small>
+            <p class="subtitle">Welcome back.</p>
+            <div style="background: linear-gradient(145deg, #111, #0a0a0a); padding: 30px; border-radius: 16px; border: 1px solid var(--border);">
+                <h3 style="margin:0 0 15px; color: var(--text-dim); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;">Daily Inspiration</h3>
+                <p id="daily-quote-text" style="font-weight: 300; font-size: 1.2rem; line-height: 1.5; margin: 0 0 15px; color: #eee;">"There is no greater agony than bearing an untold story inside you."</p>
+                <small id="daily-quote-author" style="color: var(--text-dim); font-size: 0.9rem; font-weight: 500;">— Maya Angelou</small>
             </div>
         </div>
 
         <!-- DICTIONARY -->
         <div id="dictionary" class="section">
             <h2>Dictionary</h2>
-            <p class="subtitle">Expand your vocabulary.</p>
+            <p class="subtitle">Search definitions.</p>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="dict-search" placeholder="Type a word..." onkeypress="if(event.key==='Enter') searchWord()" style="margin-bottom:0;">
-                <button class="action-btn" onclick="searchWord()" style="padding: 0 30px; border-radius: 10px;">Search</button>
+                <button class="action-btn" onclick="searchWord()" style="padding: 0 25px; border-radius: 10px;">Search</button>
             </div>
             <div id="dict-result" class="result-box" style="display:none; opacity:0; transition: opacity 0.5s;"></div>
         </div>
 
         <!-- OC CREATOR -->
         <div id="oc-creator" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
                 <div>
-                    <h2>OC Vault</h2>
-                    <p class="subtitle" style="margin-bottom:0">Manage your cast.</p>
+                    <h2>Characters</h2>
+                    <p class="subtitle" style="margin-bottom:0">Your cast.</p>
                 </div>
                 <button class="action-btn" onclick="openOCForm()">+ New</button>
             </div>
             
-            <div id="oc-form" style="display:none; background: #111; padding: 30px; border-radius: 16px; margin-bottom: 40px; border: 1px solid var(--border);">
-                <h3 style="margin-top:0; font-weight:500; margin-bottom: 20px;">Character Sheet</h3>
+            <div id="oc-form" style="display:none; background: #111; padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid var(--border);">
+                <h3 style="margin-top:0; font-weight:600; margin-bottom: 20px;">Character Sheet</h3>
                 <input type="hidden" id="oc-id">
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div style="grid-column: 1/-1;">
-                        <input type="text" id="oc-name" placeholder="Full Name (Required)" style="font-size: 1.2rem; font-weight: 500;">
+                        <input type="text" id="oc-name" placeholder="Full Name (Required)" style="font-size: 1.1rem; font-weight: 500;">
                     </div>
                     <div style="grid-column: 1/-1;">
+                        <p style="margin:0 0 5px; color:#666; font-size:0.8rem;">Portrait Image</p>
                         <input type="file" id="oc-image" accept="image/*" style="padding: 10px 0; background: transparent; border: none;">
                     </div>
-                    <input type="text" id="oc-role" placeholder="Role (e.g. Protagonist)">
+                    <input type="text" id="oc-role" placeholder="Role (e.g. Hero)">
                     <input type="text" id="oc-age" placeholder="Age">
-                    <input type="text" id="oc-gender" placeholder="Gender / Pronouns">
+                    <input type="text" id="oc-gender" placeholder="Pronouns">
                     <input type="text" id="oc-goals" placeholder="Core Goal">
                 </div>
                 
-                <textarea id="oc-desc" rows="3" placeholder="Physical Appearance"></textarea>
-                <textarea id="oc-personality" rows="3" placeholder="Personality Traits"></textarea>
-                <textarea id="oc-lore" rows="4" placeholder="Backstory & Notes"></textarea>
+                <textarea id="oc-desc" rows="3" placeholder="Appearance"></textarea>
+                <textarea id="oc-personality" rows="3" placeholder="Personality"></textarea>
+                <textarea id="oc-lore" rows="4" placeholder="Backstory"></textarea>
                 
-                <div style="display:flex; gap:15px; margin-top: 10px;">
-                    <button class="action-btn" onclick="saveOC()">Save Character</button>
+                <div style="display:flex; gap:10px; margin-top: 10px;">
+                    <button class="action-btn" onclick="saveOC()">Save</button>
                     <button class="secondary-btn" onclick="closeOCForm()" style="margin-top:0; border: none;">Cancel</button>
                 </div>
             </div>
@@ -255,42 +264,42 @@
         <!-- PROMPTS -->
         <div id="prompts" class="section">
             <h2>Prompts</h2>
-            <p class="subtitle">Overcome writer's block.</p>
-            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                <select id="prompt-genre" style="margin-bottom:0; max-width: 200px;">
+            <p class="subtitle">Idea generator.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                <select id="prompt-genre" style="margin-bottom:0; flex: 1; min-width: 140px;">
                     <option value="romance">Romance</option>
                     <option value="horror">Horror</option>
                     <option value="fantasy">Fantasy</option>
                     <option value="scifi">Sci-Fi</option>
                     <option value="slice">Slice of Life</option>
                 </select>
-                <button class="action-btn" onclick="generatePrompt()">Generate</button>
+                <button class="action-btn" onclick="generatePrompt()" style="flex: 1;">Generate</button>
             </div>
             <div class="result-box">
-                <div id="prompt-result" style="font-family: 'Playfair Display', serif; font-size: 1.4rem;">Select a genre to begin...</div>
+                <div id="prompt-result" style="font-weight: 300; font-size: 1.2rem;">Select a genre...</div>
                 <button class="secondary-btn" onclick="generatePrompt()">Re-Roll ↻</button>
             </div>
         </div>
 
         <!-- NAMES -->
         <div id="names" class="section">
-            <h2>Name Generator</h2>
-            <p class="subtitle">Find the perfect name.</p>
-            <div style="display:flex; gap:15px; margin-bottom: 20px;">
-                <select id="name-gender" style="margin-bottom:0;">
+            <h2>Names</h2>
+            <p class="subtitle">Database.</p>
+            <div style="display:flex; flex-wrap: wrap; gap:10px; margin-bottom: 20px;">
+                <select id="name-gender" style="margin-bottom:0; flex: 2;">
                     <option value="neutral">Neutral</option>
                     <option value="feminine">Feminine</option>
                     <option value="masculine">Masculine</option>
                 </select>
-                <select id="name-count" style="margin-bottom:0; max-width: 100px;">
+                <select id="name-count" style="margin-bottom:0; flex: 1;">
                     <option value="1">1</option>
                     <option value="5">5</option>
                     <option value="10">10</option>
                 </select>
-                <button class="action-btn" onclick="generateNames()">Generate</button>
+                <button class="action-btn" onclick="generateNames()" style="flex: 2;">Generate</button>
             </div>
             <div class="result-box">
-                <div id="name-result" style="font-size: 1.2rem; color: white;">Names will appear here...</div>
+                <div id="name-result" style="font-size: 1.1rem; color: white; font-weight: 500;">Names will appear here...</div>
                 <button class="secondary-btn" onclick="generateNames()">Re-Roll ↻</button>
             </div>
         </div>
@@ -304,31 +313,31 @@
             <div class="modal-body">
                 <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom: 20px;">
                     <div>
-                        <h2 id="modal-name" style="margin-bottom:5px; font-size: 2.2rem;"></h2>
-                        <p id="modal-role" style="color:var(--text-dim); margin-top:0; font-size: 1.1rem;"></p>
+                        <h2 id="modal-name" style="margin-bottom:5px; font-size: 1.8rem;"></h2>
+                        <p id="modal-role" style="color:var(--text-dim); margin-top:0; font-size: 1rem;"></p>
                     </div>
-                    <button class="secondary-btn" onclick="editCurrentOC()" style="margin-top:0; border-color: var(--border);">Edit ✎</button>
+                    <button class="secondary-btn" onclick="editCurrentOC()" style="margin-top:0; border-color: var(--border);">Edit</button>
                 </div>
                 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:30px; background:#111; padding:20px; border-radius:12px; border: 1px solid var(--border);">
-                    <div><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">AGE</small><br><span id="modal-age" style="font-size:1.1rem;"></span></div>
-                    <div><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">GENDER</small><br><span id="modal-gender" style="font-size:1.1rem;"></span></div>
-                    <div style="grid-column: 1/-1;"><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">GOAL</small><br><span id="modal-goals" style="font-size:1.1rem;"></span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:30px; background:#111; padding:15px; border-radius:12px; border: 1px solid var(--border);">
+                    <div><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">AGE</small><br><span id="modal-age" style="font-size:1rem;"></span></div>
+                    <div><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">GENDER</small><br><span id="modal-gender" style="font-size:1rem;"></span></div>
+                    <div style="grid-column: 1/-1;"><small style="color:#666; letter-spacing:1px; font-size:0.7rem;">GOAL</small><br><span id="modal-goals" style="font-size:1rem;"></span></div>
                 </div>
 
                 <div style="margin-bottom: 25px;">
-                    <h4 style="margin-bottom: 10px; color: #888; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">Appearance</h4>
-                    <p id="modal-desc" style="color: #ccc; line-height: 1.6;"></p>
+                    <h4 style="margin-bottom: 8px; color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 600;">Appearance</h4>
+                    <p id="modal-desc" style="color: #ccc; line-height: 1.6; font-size: 0.95rem;"></p>
                 </div>
 
                 <div style="margin-bottom: 25px;">
-                    <h4 style="margin-bottom: 10px; color: #888; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">Personality</h4>
-                    <p id="modal-personality" style="color: #ccc; line-height: 1.6;"></p>
+                    <h4 style="margin-bottom: 8px; color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 600;">Personality</h4>
+                    <p id="modal-personality" style="color: #ccc; line-height: 1.6; font-size: 0.95rem;"></p>
                 </div>
 
                 <div style="margin-bottom: 30px;">
-                    <h4 style="margin-bottom: 10px; color: #888; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">Lore / Notes</h4>
-                    <p id="modal-lore" style="color: #ccc; line-height: 1.6;"></p>
+                    <h4 style="margin-bottom: 8px; color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 600;">Lore / Notes</h4>
+                    <p id="modal-lore" style="color: #ccc; line-height: 1.6; font-size: 0.95rem;"></p>
                 </div>
                 
                 <button class="action-btn" onclick="deleteOC()" style="background:rgba(255, 50, 50, 0.1); color:#ff5555; width:100%; border: 1px solid rgba(255, 50, 50, 0.2);">Delete Character</button>
@@ -354,8 +363,8 @@
             if(ocs.length === 0) {
                 list.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #444; border: 2px dashed #222; border-radius: 16px;">
-                        <p style="margin:0; font-size: 1.1rem;">No characters yet.</p>
-                        <p style="font-size: 0.9rem;">Click "+ New" to begin.</p>
+                        <p style="margin:0; font-size: 1rem;">No characters yet.</p>
+                        <p style="font-size: 0.85rem; color:#666;">Click "+ New" to begin.</p>
                     </div>
                 `;
                 return;
@@ -560,9 +569,9 @@
                     const def = data[0].meanings[0].definitions[0].definition;
                     let synonyms = "";
                     if(data[0].meanings[0].synonyms && data[0].meanings[0].synonyms.length > 0) {
-                        synonyms = `<br><br><small style="color:#888; text-transform:uppercase; letter-spacing:1px;">Synonyms</small><br><span style="color:#ccc">${data[0].meanings[0].synonyms.slice(0, 5).join(", ")}</span>`;
+                        synonyms = `<br><br><small style="color:#888; text-transform:uppercase; letter-spacing:1px; font-size:0.8rem; font-weight:600;">Synonyms</small><br><span style="color:#ccc">${data[0].meanings[0].synonyms.slice(0, 5).join(", ")}</span>`;
                     }
-                    res.innerHTML = `<strong style="color:white; font-size:1.4rem; font-family:'Playfair Display', serif;">${data[0].word}</strong><br><br>${def}${synonyms}`;
+                    res.innerHTML = `<strong style="color:white; font-size:1.4rem; font-weight:600;">${data[0].word}</strong><br><br>${def}${synonyms}`;
                 }
             } catch(e) { res.innerText = "Error."; }
         }
