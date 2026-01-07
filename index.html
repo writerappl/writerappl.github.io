@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>writer V11.3</title>
+    <title>Writer V12.0 (Smart DB)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,16 +16,12 @@
         .sidebar { width:260px; background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:30px 20px; z-index:100; }
         .logo { font-size:1.5rem; font-weight:700; margin-bottom:40px; padding-left:10px; }
         .nav-items { flex:1; display:flex; flex-direction:column; gap:5px; }
-        
-        /* CLEAN PROFILE BTN */
         .profile-btn-container { margin-top:auto; padding-top:20px; border-top:1px solid var(--border); display:flex; justify-content:center; }
         .profile-btn { background:transparent; border:none; cursor:pointer; width:50px; height:50px; border-radius:50%; transition:0.2s; padding:0; display:flex; align-items:center; justify-content:center; }
         .profile-btn:hover { transform:scale(1.05); background:rgba(255,255,255,0.1); }
-        
         .menu-btn { background:transparent; border:none; color:var(--dim); text-align:left; padding:12px 15px; width:100%; cursor:pointer; border-radius:8px; font-size:0.95rem; font-weight:500; display:flex; align-items:center; gap:10px; transition:0.2s; }
         .menu-btn:hover { background:rgba(255,255,255,0.05); color:#fff; }
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
-        
         .main-content { flex:1; overflow-y:auto; padding:50px; padding-top:calc(50px + var(--safe-top)); }
         .section { display:none; max-width:900px; margin:0 auto; animation:fadeIn 0.3s ease; }
         .section.active { display:block; }
@@ -42,15 +38,7 @@
         /* --- PROFILE --- */
         .profile-header { display:flex; align-items:center; gap:20px; margin-bottom:40px; }
         .avatar-lg { width:80px; height:80px; border-radius:50%; background:#222 center/cover; border:2px solid var(--border); }
-        .avatar-sm {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background:#333 center/cover;
-    border:1px solid var(--border);
-    flex-shrink:0;
-}
-
+        .avatar-sm { width:32px; height:32px; border-radius:50%; background:#333 center/cover; border:1px solid var(--border); flex-shrink:0; }
 
         /* --- AUTH SCREEN --- */
         #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
@@ -84,56 +72,15 @@
         
         /* --- MOBILE --- */
         @media(max-width:768px) {
-    body { flex-direction:column; }
-
-    .sidebar {
-        width:100%;
-        position:fixed;
-        bottom:0;
-        padding:10px 20px calc(10px + var(--safe-bottom));
-        background:rgba(0,0,0,0.95);
-        backdrop-filter:blur(10px);
-        border-top:1px solid var(--border);
-        border-right:none;
-        display:flex;
-        flex-direction:column;       /* vertical stack */
-        align-items:center;
-        z-index:9000;
-    }
-
-    .nav-items {
-        flex-direction:row;
-        width:100%;
-        justify-content:space-between;
-        margin-bottom:6px;           /* space above avatar */
-    }
-
-    .profile-btn-container {
-        border:none;
-        padding:0;
-        margin:0;
-        width:100%;
-        display:flex;
-        justify-content:center;      /* center avatar */
-    }
-
-    .menu-btn {
-        padding:5px;
-        justify-content:center;
-        font-size:0.75rem;
-        text-align:center;
-        flex-direction:column;
-        gap:4px;
-    }
-
-    .main-content {
-        padding:20px;
-        padding-bottom:110px;        /* more room for taller bottom bar */
-    }
-
-    .form-grid { grid-template-columns:1fr; }
-}
-
+            body { flex-direction:column; }
+            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:10px 20px calc(10px + var(--safe-bottom)); background:rgba(0,0,0,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:column; align-items:center; z-index:9000; }
+            .nav-items { flex-direction:row; width:100%; justify-content:space-between; margin-bottom:6px; }
+            .profile-btn-container { border:none; padding:0; margin:0; width:100%; display:flex; justify-content:center; }
+            .logo { display:none; }
+            .menu-btn { padding:5px; justify-content:center; font-size:0.75rem; text-align:center; flex-direction:column; gap:4px; }
+            .main-content { padding:20px; padding-bottom:110px; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -219,7 +166,7 @@
         <div id="dictionary" class="section">
             <h2>Dictionary</h2>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="dict-search" placeholder="Type a word..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchWord()">
+                <input type="text" id="dict-search" placeholder="Type a word (e.g. 'Love' or 'Instagram')..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchWord()">
                 <button class="btn" onclick="searchWord()" style="width:auto;">Search</button>
             </div>
             <div id="dict-result" class="result-box"></div>
@@ -269,8 +216,7 @@
         <div id="oc-form-modal">
             <div class="form-container">
                 <h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2>
-                <input type="hidden" id="form-id"> <!-- ID for editing -->
-                
+                <input type="hidden" id="form-id">
                 <div class="form-section-title">Identity</div>
                 <div class="form-grid">
                     <input type="text" id="form-name" placeholder="Full Name (Required)">
@@ -280,19 +226,15 @@
                     <input type="text" id="form-age" placeholder="Age">
                     <input type="text" id="form-gender" placeholder="Gender / Pronouns">
                 </div>
-
                 <div class="form-section-title">Visuals</div>
                 <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Character Image</label>
                 <input type="file" id="form-image" accept="image/*">
                 <textarea id="form-desc" rows="3" placeholder="Physical Appearance / Style"></textarea>
-
                 <div class="form-section-title">Inner World</div>
                 <textarea id="form-personality" rows="3" placeholder="Personality Traits & Flaws"></textarea>
                 <input type="text" id="form-goals" placeholder="Core Goal / Motivation">
-
                 <div class="form-section-title">History</div>
                 <textarea id="form-lore" rows="6" placeholder="Backstory / Lore"></textarea>
-
                 <div style="display:flex; gap:10px; margin-top:30px;">
                     <button class="btn" onclick="saveOc()">Save Character</button>
                     <button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button>
@@ -305,26 +247,20 @@
             <div class="view-content">
                 <div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div>
                 <div id="view-img" class="view-header-img"></div>
-                
                 <div class="view-body">
                     <h2 id="view-name" style="margin:0 0 5px 0;">Name</h2>
                     <p id="view-role" style="color:#888; margin:0 0 20px 0; font-size:1.1rem;">Role</p>
-                    
                     <div class="stat-grid">
                         <div class="stat-box"><small>Age</small><span id="view-age">-</span></div>
                         <div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div>
                         <div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div>
                     </div>
-
                     <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Appearance</h4>
                     <p id="view-desc" style="color:#ccc; line-height:1.6; margin-top:0;"></p>
-                    
                     <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Personality</h4>
                     <p id="view-personality" style="color:#ccc; line-height:1.6; margin-top:0;"></p>
-
                     <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Lore</h4>
                     <p id="view-lore" style="color:#ccc; line-height:1.6; margin-top:0; white-space: pre-wrap;"></p>
-
                     <div style="display:flex; gap:10px; margin-top:30px;">
                         <button class="btn" onclick="editOcFromView()">Edit Character</button>
                         <button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button>
@@ -336,15 +272,17 @@
     </div>
 
     <script>
-        // --- CONFIG ---
         const SUPABASE_URL = 'https://icotzotkvdzytrrxtudq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let user = null;
         let currentOc = null; 
         let isSignupMode = false;
+        
+        // Cache variables to store fetched DB items
+        let promptCache = {}; 
+        let nameCache = {};
 
-        // --- AUTH ---
         async function checkSession() {
             const { data } = await db.auth.getSession();
             if (data.session) {
@@ -356,7 +294,6 @@
                 document.getElementById('auth-screen').style.display = 'flex';
             }
         }
-        
         function toggleAuthMode() {
             isSignupMode = !isSignupMode;
             const title = document.querySelector('#auth-screen h1');
@@ -365,9 +302,7 @@
             const signBtn = document.getElementById('signup-btn');
             const toggle = document.getElementById('auth-toggle-link');
             const msg = document.getElementById('auth-msg');
-
             msg.innerText = ""; 
-
             if(isSignupMode) {
                 title.innerText = "Join Writer.";
                 sub.innerText = "Create your account.";
@@ -382,7 +317,6 @@
                 toggle.innerText = "Need an account? Sign Up";
             }
         }
-
         async function performLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -392,24 +326,17 @@
             if (error) msg.innerText = error.message; 
             else location.reload();
         }
-
         async function performSignup() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const msg = document.getElementById('auth-msg');
             msg.innerText = "Creating account...";
             const { data, error } = await db.auth.signUp({ email, password });
-            if (error) {
-                msg.innerText = error.message; 
-            } else {
-                msg.innerText = "Success! You are logged in.";
-                setTimeout(() => location.reload(), 1000);
-            }
+            if (error) msg.innerText = error.message; 
+            else { msg.innerText = "Success! You are logged in."; setTimeout(() => location.reload(), 1000); }
         }
-
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
-        // --- PROFILES ---
         async function loadProfile() {
             let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
             if(!data) {
@@ -435,7 +362,6 @@
             alert("Saved!"); loadProfile();
         }
 
-        // --- CHARACTERS ---
         async function loadOcs() {
             const { data } = await db.from('characters').select('*').order('id', {ascending:false});
             const list = document.getElementById('oc-list');
@@ -444,19 +370,11 @@
                 const el = document.createElement('div');
                 el.className = 'oc-card';
                 el.onclick = () => openViewModal(oc);
-                
                 const bg = oc.image ? `background-image: url('${oc.image}')` : `background-color: #222`;
-                el.innerHTML = `
-                    <div class="oc-card-img" style="${bg}"></div>
-                    <div class="oc-card-info">
-                        <h3>${oc.name}</h3>
-                        <small>${oc.role || 'No Role'}</small>
-                    </div>`;
+                el.innerHTML = `<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role || 'No Role'}</small></div>`;
                 list.appendChild(el);
             });
         }
-
-        // 1. VIEW
         function openViewModal(oc) {
             currentOc = oc;
             document.getElementById('view-name').innerText = oc.name;
@@ -467,18 +385,11 @@
             document.getElementById('view-desc').innerText = oc.desc || "No physical description.";
             document.getElementById('view-personality').innerText = oc.personality || "No personality details.";
             document.getElementById('view-lore').innerText = oc.lore || "No backstory logged.";
-            
             const imgHeader = document.getElementById('view-img');
-            if(oc.image) {
-                imgHeader.style.backgroundImage = `url('${oc.image}')`;
-                imgHeader.style.display = 'block';
-            } else {
-                imgHeader.style.display = 'none';
-            }
+            if(oc.image) { imgHeader.style.backgroundImage = `url('${oc.image}')`; imgHeader.style.display = 'block'; } 
+            else { imgHeader.style.display = 'none'; }
             document.getElementById('oc-view-modal').style.display = 'flex';
         }
-
-        // 2. CREATE / EDIT FORM
         function openOcForm(isEdit = false) {
             document.getElementById('oc-form-modal').style.display = 'block';
             if(isEdit && currentOc) {
@@ -498,84 +409,104 @@
                 document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i => i.value = "");
             }
         }
-
-        function editOcFromView() {
-            document.getElementById('oc-view-modal').style.display = 'none';
-            openOcForm(true);
-        }
-
+        function editOcFromView() { document.getElementById('oc-view-modal').style.display = 'none'; openOcForm(true); }
         async function saveOc() {
             const id = document.getElementById('form-id').value;
             const name = document.getElementById('form-name').value;
             if(!name) return alert("Name is required");
-
             const file = document.getElementById('form-image').files[0];
             let imageBase64 = null;
-            if(file) {
-                imageBase64 = await new Promise(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
+            if(file) imageBase64 = await new Promise(r => { const rd = new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); });
             const ocData = {
-                user_id: user.id,
-                name: name,
-                role: document.getElementById('form-role').value,
-                age: document.getElementById('form-age').value,
-                gender: document.getElementById('form-gender').value,
-                "desc": document.getElementById('form-desc').value,
-                personality: document.getElementById('form-personality').value,
-                goals: document.getElementById('form-goals').value,
-                lore: document.getElementById('form-lore').value
+                user_id: user.id, name: name, role: document.getElementById('form-role').value,
+                age: document.getElementById('form-age').value, gender: document.getElementById('form-gender').value,
+                "desc": document.getElementById('form-desc').value, personality: document.getElementById('form-personality').value,
+                goals: document.getElementById('form-goals').value, lore: document.getElementById('form-lore').value
             };
             if(imageBase64) ocData.image = imageBase64;
-
-            if(id) { await db.from('characters').update(ocData).eq('id', id); } 
-            else { await db.from('characters').insert([ocData]); }
-
+            if(id) await db.from('characters').update(ocData).eq('id', id);
+            else await db.from('characters').insert([ocData]);
             document.getElementById('oc-form-modal').style.display='none';
             loadOcs();
         }
-
         async function deleteOc() {
-            if(!confirm("Delete this character? This cannot be undone.")) return;
+            if(!confirm("Delete this character?")) return;
             await db.from('characters').delete().eq('id', currentOc.id);
             document.getElementById('oc-view-modal').style.display='none';
             loadOcs();
         }
 
-        // --- TOOLS ---
+        // --- NEW SMART TOOLS ---
         async function searchWord() {
             const w = document.getElementById('dict-search').value;
+            const resBox = document.getElementById('dict-result');
+            resBox.innerHTML = "Searching...";
+            
+            // 1. Try Dictionary API
             try { 
                 const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`); 
+                if(!req.ok) throw new Error("Not found");
                 const d = await req.json(); 
                 let syns = "";
                 if(d[0].meanings[0].synonyms.length > 0) syns = `<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;
-                document.getElementById('dict-result').innerHTML = `<h3 style="margin:0">${d[0].word}</h3><p>${d[0].meanings[0].definitions[0].definition}</p>${syns}`; 
-            } catch(e) { document.getElementById('dict-result').innerText = "Word not found."; }
-        }
-        function generatePrompt() { 
-            const genre = document.getElementById('prompt-genre').value;
-            const prompts = {
-                romance: ["Fake dating during a blizzard.", "Rivals forced to share a workspace.", "A love letter meant for someone else."],
-                horror: ["The reflection blinked.", "A door appeared where there wasn't one.", "The GPS led them to a graveyard."],
-                fantasy: ["A sword that gets heavier with guilt.", "The dragon is actually the bank manager.", "Magic is illegal, but you just sneezed sparks."],
-                scifi: ["The AI asks for a bedtime story.", "Gravity stops for 5 minutes a day.", "First contact was a telemarketer."]
-            };
-            const p = prompts[genre];
-            document.getElementById('prompt-result').innerText = p[Math.floor(Math.random()*p.length)];
-        }
-        function generateNames() {
-            const count = parseInt(document.getElementById('name-count').value);
-            const names = ["Rowan", "Sage", "River", "Alex", "Quinn", "Jordan", "Casey", "Riley", "Avery", "Cameron", "Dakota", "Ellis", "Emerson", "Finley", "Gray", "Harley", "Hayden", "Jamie", "Jesse", "Kendall"];
-            const result = names.sort(() => 0.5 - Math.random()).slice(0, count).join(", ");
-            document.getElementById('name-result').innerText = result;
+                resBox.innerHTML = `<h3 style="margin:0">${d[0].word}</h3><p>${d[0].meanings[0].definitions[0].definition}</p>${syns}`; 
+            } catch(e) { 
+                // 2. Fallback to Wikipedia
+                try {
+                    const wikiReq = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);
+                    if(!wikiReq.ok) throw new Error("Wiki Not found");
+                    const wikiData = await wikiReq.json();
+                    if(wikiData.type === "standard") {
+                        resBox.innerHTML = `<h3 style="margin:0">${wikiData.title} <small style="font-size:0.7rem; color:#888; border:1px solid #444; padding:2px 5px; border-radius:4px;">WIKIPEDIA</small></h3><p>${wikiData.extract}</p>`;
+                    } else {
+                        resBox.innerText = "Word not found in Dictionary or Wikipedia."; 
+                    }
+                } catch(err) {
+                    resBox.innerText = "Word not found."; 
+                }
+            }
         }
 
-        // --- UI UTILS ---
+        async function generatePrompt() { 
+            const genre = document.getElementById('prompt-genre').value;
+            // 1. Check if we have cached this genre yet
+            if(!promptCache[genre]) {
+                document.getElementById('prompt-result').innerText = "Loading library...";
+                const { data } = await db.from('prompts').select('content').eq('genre', genre);
+                if(data && data.length > 0) {
+                    promptCache[genre] = data.map(i => i.content);
+                } else {
+                    promptCache[genre] = ["No prompts found in database for this genre."];
+                }
+            }
+            // 2. Pick random from cache
+            const list = promptCache[genre];
+            const randomPrompt = list[Math.floor(Math.random() * list.length)];
+            document.getElementById('prompt-result').innerText = randomPrompt;
+        }
+
+        async function generateNames() {
+            const count = parseInt(document.getElementById('name-count').value);
+            const gender = document.getElementById('name-gender').value;
+            const resBox = document.getElementById('name-result');
+            
+            // 1. Check cache
+            if(!nameCache[gender]) {
+                resBox.innerText = "Loading names...";
+                const { data } = await db.from('names').select('name').eq('gender', gender);
+                 if(data && data.length > 0) {
+                    nameCache[gender] = data.map(i => i.name);
+                } else {
+                    nameCache[gender] = ["No names in DB."];
+                }
+            }
+            // 2. Pick randoms
+            const list = nameCache[gender];
+            // Shuffle and pick 'count' items
+            const shuffled = list.sort(() => 0.5 - Math.random());
+            resBox.innerText = shuffled.slice(0, count).join(", ");
+        }
+
         function nav(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
