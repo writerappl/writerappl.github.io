@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Writer V3</title>
+    <title>Writer V3.1</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
             flex-direction: column;
             flex-shrink: 0;
             background: #000;
-            z-index: 100;
+            z-index: 500; /* Super high z-index to stay on top */
         }
 
         .logo {
@@ -73,15 +73,19 @@
             position: relative;
         }
 
+        /* --- SECTION FIX --- */
         .section {
-            display: none;
-            max-width: 900px; /* Wider for grid */
+            display: none; /* Default state */
+            max-width: 900px;
             margin: 0 auto;
             animation: fadeIn 0.3s ease;
-            pointer-events: none; /* CLICK FIX */
+            pointer-events: none; /* INVISIBLE LAYERS CAN'T BE CLICKED */
         }
         
-        .section.active { display: block; pointer-events: auto; }
+        .section.active { 
+            display: block; 
+            pointer-events: auto; /* CLICKABLE WHEN VISIBLE */
+        }
 
         h2 { font-weight: 600; font-size: 2rem; margin: 0 0 10px 0; }
         .subtitle { color: var(--text-dim); margin: 0 0 30px 0; font-weight: 300; }
@@ -125,7 +129,7 @@
             line-height: 1.5;
         }
 
-        /* --- OC GRID LAYOUT (NEW) --- */
+        /* --- OC GRID LAYOUT --- */
         .oc-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -145,260 +149,4 @@
         }
         .oc-card:hover { transform: translateY(-3px); border-color: #666; }
         
-        .oc-card-img {
-            width: 100%;
-            height: 150px;
-            background-color: #222;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .oc-card-info {
-            padding: 15px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        /* --- MODAL (POPUP) --- */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-header-img {
-            width: 100%;
-            height: 200px;
-            background-color: #222;
-            background-size: cover;
-            background-position: center;
-        }
-        .modal-body { padding: 30px; }
-
-        .close-btn {
-            position: absolute;
-            top: 15px; right: 15px;
-            background: rgba(0,0,0,0.5); 
-            border: none;
-            color: white; width: 30px; height: 30px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* --- MOBILE STYLES --- */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            
-            .sidebar {
-                position: fixed;
-                bottom: 0; left: 0;
-                width: 100%;
-                height: var(--nav-height);
-                border-right: none;
-                border-top: 1px solid var(--border);
-                flex-direction: row;
-                padding: 0;
-                justify-content: space-around;
-            }
-
-            .logo { display: none; }
-
-            .menu-btn {
-                padding: 0;
-                font-size: 0.75rem;
-                flex: 1;
-                text-align: center;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 0;
-            }
-            .menu-btn.active { border-top: 2px solid white; background: none; }
-
-            .main-content { padding: 20px; padding-bottom: 90px; }
-            h2 { font-size: 1.8rem; }
-            button.action-btn { max-width: 100%; }
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body>
-
-    <!-- NAV -->
-    <div class="sidebar">
-        <div class="logo">writer.</div>
-        <button class="menu-btn active" onclick="showSection('home')">Home</button>
-        <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
-        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
-        <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
-        <button class="menu-btn" onclick="showSection('names')">Names</button>
-    </div>
-
-    <!-- MAIN AREA -->
-    <div class="main-content">
-        
-        <!-- HOME -->
-        <div id="home" class="section active">
-            <h2>Dashboard</h2>
-            <p class="subtitle">Welcome back to your workspace.</p>
-            
-            <div style="background: #111; padding: 25px; border-radius: 12px; border: 1px solid #222; margin-top: 20px;">
-                <h3 style="margin-top: 0; color: #888; font-size: 0.9rem; text-transform: uppercase;">Daily Inspiration</h3>
-                <p id="daily-quote" style="font-size: 1.2rem; font-style: italic; margin-bottom: 10px;">"There is no greater agony than bearing an untold story inside you."</p>
-                <small style="color: #666;">— Maya Angelou</small>
-            </div>
-        </div>
-
-        <!-- DICTIONARY -->
-        <div id="dictionary" class="section">
-            <h2>Dictionary</h2>
-            <p class="subtitle">Search definitions.</p>
-            <input type="text" id="dict-search" placeholder="Type a word..." onkeypress="if(event.key==='Enter') searchWord()">
-            <button class="action-btn" onclick="searchWord()">Search</button>
-            <div id="dict-result" class="result-box">Definitions will appear here...</div>
-        </div>
-
-        <!-- OCS -->
-        <div id="oc-creator" class="section">
-            <h2>OC Vault</h2>
-            <p class="subtitle">Manage your characters.</p>
-            
-            <button class="action-btn" onclick="toggleOCForm()" style="margin-bottom: 20px;">+ New Character</button>
-            
-            <!-- NEW EXPANDED FORM -->
-            <div id="oc-form" style="display: none; background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
-                <h3 style="margin-top:0;">Basic Info</h3>
-                <input type="text" id="oc-name" placeholder="Full Name (Required)">
-                <input type="file" id="oc-image" accept="image/*" style="padding: 10px;">
-                <p style="font-size: 0.8rem; color: #666; margin-top: -10px; margin-bottom: 15px;">Upload Image (Max 1MB)</p>
-
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="oc-role" placeholder="Role (Protagonist, etc)">
-                    <input type="text" id="oc-age" placeholder="Age">
-                </div>
-                
-                <h3 style="margin-top:10px;">Details</h3>
-                <input type="text" id="oc-gender" placeholder="Gender / Pronouns">
-                <textarea id="oc-desc" rows="2" placeholder="Physical Appearance..."></textarea>
-                <textarea id="oc-personality" rows="2" placeholder="Personality Traits..."></textarea>
-                <textarea id="oc-goals" rows="2" placeholder="Goals & Fears..."></textarea>
-                <textarea id="oc-lore" rows="3" placeholder="Backstory / Notes..."></textarea>
-                
-                <button class="action-btn" onclick="processAndSaveOC()">Save Character</button>
-            </div>
-
-            <div id="oc-list" class="oc-grid"></div>
-        </div>
-
-        <!-- PROMPTS -->
-        <div id="prompts" class="section">
-            <h2>Prompt Generator</h2>
-            <p class="subtitle">Generate unique scenarios.</p>
-            <select id="prompt-genre">
-                <option value="romance">Romance</option>
-                <option value="horror">Horror</option>
-                <option value="fantasy">Fantasy</option>
-                <option value="scifi">Sci-Fi</option>
-            </select>
-            <button class="action-btn" onclick="generatePrompt()">Generate Prompt</button>
-            <div id="prompt-result" class="result-box">Select a genre to begin...</div>
-        </div>
-
-        <!-- NAMES -->
-        <div id="names" class="section">
-            <h2>Name Generator</h2>
-            <p class="subtitle">Curated names database.</p>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="name-gender">
-                    <option value="feminine">Feminine</option>
-                    <option value="masculine">Masculine</option>
-                    <option value="neutral">Neutral</option>
-                </select>
-                <select id="name-count">
-                    <option value="1">1</option>
-                    <option value="5">5</option>
-                </select>
-            </div>
-            <button class="action-btn" onclick="generateNames()">Generate Names</button>
-            <div id="name-result" class="result-box">Names will appear here...</div>
-        </div>
-
-    </div>
-
-    <!-- OC DETAILS MODAL -->
-    <div id="oc-modal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModalBtn()">×</button>
-            <div id="modal-img-header" class="modal-header-img"></div>
-            
-            <div class="modal-body">
-                <h2 id="modal-name" style="margin-bottom: 5px;">Name</h2>
-                <p id="modal-role" style="color: #888; margin-top: 0;">Role</p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #1a1a1a; padding: 15px; border-radius: 8px;">
-                    <div><small style="color:#666">AGE</small><br><span id="modal-age"></span></div>
-                    <div><small style="color:#666">GENDER</small><br><span id="modal-gender"></span></div>
-                </div>
-
-                <p><strong>Appearance:</strong></p>
-                <p id="modal-desc" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
-                
-                <p><strong>Personality:</strong></p>
-                <p id="modal-personality" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
-
-                <p><strong>Goals & Fears:</strong></p>
-                <p id="modal-goals" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
-
-                <p><strong>Backstory:</strong></p>
-                <p id="modal-lore" style="color: #ccc; line-height: 1.4; font-size: 0.95rem;"></p>
-                
-                <button class="action-btn" onclick="deleteOC()" style="background: #330000; color: #ff8888; margin-top: 30px;">Delete Character</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- NAVIGATION ---
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function toggleOCForm() {
-            const form = document.getElementById('oc-form');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // --- DATABASE ---
-        const promptsDB = {
-            romance: ["Academic rivals forced to share a desk.", "Barista writes on cups, customer writes back.", "Ghost hunter falls for a ghost.", "Fake dating during a snowstorm.", "Villain falls for the sidekick."],
-            horror: ["Reflection blinked.", "Door appeared overnight.", "Baby monitor hears a lullaby.", "GPS says 'Turn around' on a straight road.", "Tally mark appeared on your arm."],
-            fantasy: ["Sword is heavy for the knight, light for the baker.", "Dragon hoards books.", "Magic is illegal, you sneezed sparks.", "Tavern keeper is a retired Dark Lord."],
-            scifi: ["AI asked 'Am I dreaming?'", "Message from yourself 10 years in future.", "Gravity stopped for 5 seconds.", "First a
+        .oc-card
