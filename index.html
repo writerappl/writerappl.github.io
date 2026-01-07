@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V16.0 (Insta-Chat)</title>
+    <title>Writer V16.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,7 +12,7 @@
         * { box-sizing:border-box; outline:none; -webkit-tap-highlight-color:transparent; }
         body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; display:flex; height:100dvh; overflow:hidden; }
 
-        /* --- DESKTOP LAYOUT --- */
+        /* --- SIDEBAR --- */
         .sidebar { width:260px; background:var(--sidebar); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:30px 20px; z-index:100; }
         .logo { font-size:1.5rem; font-weight:700; margin-bottom:40px; padding-left:10px; }
         .nav-items { flex:1; display:flex; flex-direction:column; gap:5px; }
@@ -25,45 +25,36 @@
         .menu-btn:hover { background:rgba(255,255,255,0.05); color:#fff; }
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
         
+        /* --- MAIN CONTENT AREA --- */
         .main-content { flex:1; overflow-y:auto; padding:50px; padding-top:calc(50px + var(--safe-top)); position:relative; }
         
-        /* Chat Layout */
-        #tavern.section.active { display:flex; flex-direction:column; height:calc(100vh - 100px); max-height:100%; }
-        
+        /* THE CRUCIAL PART: Hiding/Showing Sections */
         .section { display:none; max-width:900px; margin:0 auto; animation:fadeIn 0.3s ease; }
         .section.active { display:block; }
+        
+        /* Chat Layout Exception */
+        #tavern.section.active { display:flex; flex-direction:column; height:calc(100vh - 100px); max-height:100%; }
+
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
         /* --- COMPONENTS --- */
         input, textarea, select { background:var(--card); border:1px solid var(--border); color:#fff; padding:15px; border-radius:10px; width:100%; margin-bottom:15px; font-family:'Inter'; font-size:16px; appearance:none; }
-        input:focus, textarea:focus { border-color: #555; }
         button.btn { background:#fff; color:#000; border:none; padding:12px 25px; border-radius:50px; font-weight:600; cursor:pointer; width:100%; transition:0.2s; }
-        button.btn:hover { transform:translateY(-2px); }
         button.btn-sec { background:rgba(255,255,255,0.05); color:#ccc; border:1px solid var(--border); padding:8px 16px; border-radius:20px; font-size:0.85rem; cursor:pointer; margin-top:10px; }
         .result-box { margin-top:20px; padding:20px; border:1px solid var(--border); border-radius:10px; background:var(--card); min-height:60px; color:#ddd; position:relative; }
 
-        /* --- INSTA-STYLE CHAT --- */
+        /* --- CHAT STYLES --- */
         .chat-container { flex:1; background:#000; border:1px solid var(--border); border-radius:16px; display:flex; flex-direction:column; overflow:hidden; }
         .chat-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
         .chat-input-area { padding:15px; background:#000; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center; }
         .chat-input-area input { margin-bottom:0; border-radius:25px; background:#121212; border:none; padding:12px 20px; }
         .chat-input-area button { width:45px; height:45px; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; background:transparent; color:var(--blue); }
-        
-        /* Message Row */
         .msg-row { display:flex; align-items:flex-end; gap:10px; width:100%; }
         .msg-row.mine { flex-direction:row-reverse; }
-        
-        /* Avatar */
         .msg-avatar { width:32px; height:32px; border-radius:50%; background:#333 center/cover; flex-shrink:0; border:1px solid var(--border); }
-        
-        /* Bubble */
         .msg-bubble { max-width:70%; padding:12px 16px; border-radius:22px; font-size:0.95rem; line-height:1.4; position:relative; word-wrap:break-word; }
-        
-        /* Theirs: Gray, rounder */
         .msg-row.theirs .msg-bubble { background:#262626; color:#fff; border-bottom-left-radius:4px; }
-        /* Mine: Blue, rounder */
         .msg-row.mine .msg-bubble { background:var(--blue); color:#fff; border-bottom-right-radius:4px; }
-        
         .msg-name { font-size:0.75rem; color:#888; margin-bottom:4px; margin-left:12px; display:block; }
         .msg-row.mine .msg-name { display:none; }
 
@@ -73,21 +64,10 @@
         .avatar-sm { width:32px; height:32px; border-radius:50%; background:#333 center/cover; border:1px solid var(--border); flex-shrink:0; }
         .theme-btn { background: linear-gradient(135deg, #1db954, #191919); color: #fff; border:none; padding:10px 15px; border-radius:30px; font-weight:600; display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-size:0.9rem; margin-bottom:20px; }
 
-        /* --- AUTH --- */
-        #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
-        .auth-toggle { color:#888; margin-top:20px; cursor:pointer; font-size:0.9rem; text-decoration:underline; }
-        
         /* --- MOBILE MENU --- */
         @media(max-width:768px) {
             body { flex-direction:column; }
-            .sidebar {
-                width:100%; height:auto; position:fixed; bottom:0;
-                padding:8px 0 calc(8px + var(--safe-bottom));
-                background:rgba(0,0,0,0.98); backdrop-filter:blur(12px);
-                border-top:1px solid var(--border); border-right:none;
-                display:flex; flex-direction:row; align-items:center;
-                z-index:9000; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;
-            }
+            .sidebar { width:100%; height:auto; position:fixed; bottom:0; padding:8px 0 calc(8px + var(--safe-bottom)); background:rgba(0,0,0,0.98); backdrop-filter:blur(12px); border-top:1px solid var(--border); border-right:none; display:flex; flex-direction:row; align-items:center; z-index:9000; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; }
             .logo { display:none; }
             .nav-items { display:flex; flex-direction:row; width:auto; gap:8px; padding:0 15px; flex-shrink:0; }
             .menu-btn { padding:6px 14px; min-width:auto; border-radius:20px; font-size:0.8rem; background:#111; border:1px solid var(--border); width:auto; flex-shrink:0; }
@@ -97,6 +77,32 @@
             #tavern.section.active { height: calc(100vh - 120px); }
             .form-grid { grid-template-columns: 1fr; }
         }
+        
+        /* --- AUTH --- */
+        #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
+        .auth-toggle { color:#888; margin-top:20px; cursor:pointer; font-size:0.9rem; text-decoration:underline; }
+
+        /* --- OC GRID --- */
+        .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .oc-card { border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg); cursor: pointer; overflow: hidden; height: 280px; display: flex; flex-direction: column; transition:0.2s; }
+        .oc-card:hover { border-color: #444; transform:translateY(-2px); }
+        .oc-card-img { height: 160px; background: #1a1a1a center/cover; }
+        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border); }
+        .oc-card h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+        
+        /* --- MODALS --- */
+        #oc-form-modal { display:none; position:fixed; inset:0; background:#000; z-index:200; padding:20px; overflow-y:auto; }
+        .form-container { max-width:700px; margin:0 auto; padding-bottom:50px; }
+        .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
+        .form-section-title { color:#666; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-top:20px; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px; }
+        #oc-view-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px); }
+        .view-content { background:#0a0a0a; border:1px solid #333; border-radius:16px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative; display:flex; flex-direction:column; }
+        .view-header-img { height:200px; background:#222 center/cover; flex-shrink:0; }
+        .view-body { padding:30px; }
+        .close-btn { position:absolute; top:15px; right:15px; width:32px; height:32px; background:rgba(0,0,0,0.6); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; z-index:10; }
+        .stat-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; background:#111; padding:15px; border-radius:10px; margin:20px 0; text-align:center; }
+        .stat-box small { color:#666; font-size:0.7rem; text-transform:uppercase; }
+        .stat-box span { display:block; font-weight:600; font-size:0.95rem; }
     </style>
 </head>
 <body>
@@ -119,12 +125,12 @@
     <div class="sidebar">
         <div class="logo">writer.</div>
         <div class="nav-items">
-            <button class="menu-btn active" onclick="nav('home')">Home</button>
-            <button class="menu-btn" onclick="nav('ocs')">Characters</button>
-            <button class="menu-btn" onclick="nav('tavern')">Chat</button>
-            <button class="menu-btn" onclick="nav('dictionary')">Dictionary</button>
-            <button class="menu-btn" onclick="nav('prompts')">Prompts</button>
-            <button class="menu-btn" onclick="nav('names')">Names</button>
+            <button class="menu-btn active" id="btn-home" onclick="nav('home')">Home</button>
+            <button class="menu-btn" id="btn-ocs" onclick="nav('ocs')">Characters</button>
+            <button class="menu-btn" id="btn-tavern" onclick="nav('tavern')">Chat</button>
+            <button class="menu-btn" id="btn-dictionary" onclick="nav('dictionary')">Dictionary</button>
+            <button class="menu-btn" id="btn-prompts" onclick="nav('prompts')">Prompts</button>
+            <button class="menu-btn" id="btn-names" onclick="nav('names')">Names</button>
         </div>
         <div class="profile-btn-container">
             <button class="profile-btn" onclick="nav('profile')">
@@ -135,7 +141,7 @@
 
     <!-- MAIN -->
     <div class="main-content">
-        <!-- HOME -->
+        <!-- HOME SECTION -->
         <div id="home" class="section active">
             <h2>Dashboard</h2>
             <div style="background:linear-gradient(145deg,#111,#0a0a0a); padding:30px; border-radius:16px; border:1px solid var(--border);">
@@ -144,7 +150,7 @@
             </div>
         </div>
         
-        <!-- CHAT -->
+        <!-- CHAT SECTION -->
         <div id="tavern" class="section">
             <h2 style="margin-bottom:10px;">Global Chat</h2>
             <div class="chat-container">
@@ -158,7 +164,7 @@
             </div>
         </div>
 
-        <!-- PROFILE -->
+        <!-- PROFILE SECTION -->
         <div id="profile" class="section">
             <h2>Your Profile</h2>
             <div class="profile-header">
@@ -175,7 +181,8 @@
                 <button class="btn-sec" onclick="handleLogout()" style="color:#ff5555; border-color:#ff555533; width:100%; margin-top:20px;">Log Out</button>
             </div>
         </div>
-        <!-- CHARACTERS -->
+
+        <!-- CHARACTERS SECTION -->
         <div id="ocs" class="section">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                 <h2>Character Vault</h2>
@@ -183,7 +190,8 @@
             </div>
             <div id="oc-list" class="oc-grid"></div>
         </div>
-        <!-- DICTIONARY -->
+
+        <!-- DICTIONARY SECTION -->
         <div id="dictionary" class="section">
             <h2>Smart Dictionary</h2>
             <div style="display:flex; gap:10px;">
@@ -192,7 +200,8 @@
             </div>
             <div id="dict-result" class="result-box"></div>
         </div>
-        <!-- PROMPTS -->
+
+        <!-- PROMPTS SECTION -->
         <div id="prompts" class="section">
             <h2>Prompts</h2>
             <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -201,7 +210,8 @@
             </div>
             <div class="result-box"><div id="prompt-result" style="font-size:1.2rem;">Select a genre...</div><button class="btn-sec" onclick="generatePrompt()">Re-Roll ↻</button></div>
         </div>
-        <!-- NAMES -->
+
+        <!-- NAMES SECTION -->
         <div id="names" class="section">
             <h2>Name Generator</h2>
             <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -211,10 +221,11 @@
             </div>
             <div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div>
         </div>
-
-        <!-- MODALS (Hidden) -->
+        
+        <!-- MODALS -->
         <div id="oc-form-modal"><div class="form-container"><h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2><input type="hidden" id="form-id"><div class="form-section-title">Identity</div><div class="form-grid"><input type="text" id="form-name" placeholder="Full Name"><input type="text" id="form-role" placeholder="Role"></div><div class="form-grid"><input type="text" id="form-age" placeholder="Age"><input type="text" id="form-gender" placeholder="Gender"></div><div class="form-section-title">Visuals & Audio</div><label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Image</label><input type="file" id="form-image" accept="image/*"><textarea id="form-desc" rows="3" placeholder="Appearance"></textarea><input type="text" id="form-song" placeholder="Theme Song URL"><div class="form-section-title">Inner World</div><textarea id="form-personality" rows="3" placeholder="Personality"></textarea><input type="text" id="form-goals" placeholder="Goal"><div class="form-section-title">History</div><textarea id="form-lore" rows="6" placeholder="Lore"></textarea><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="saveOc()">Save</button><button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button></div></div></div>
         <div id="oc-view-modal"><div class="view-content"><div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div><div id="view-img" class="view-header-img"></div><div class="view-body"><h2 id="view-name" style="margin:0 0 5px 0;">Name</h2><p id="view-role" style="color:#888; margin:0 0 20px 0; font-size:1.1rem;">Role</p><div id="view-song-container"></div><div class="stat-grid"><div class="stat-box"><small>Age</small><span id="view-age">-</span></div><div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div><div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div></div><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Appearance</h4><p id="view-desc" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Personality</h4><p id="view-personality" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Lore</h4><p id="view-lore" style="color:#ccc; margin-top:0; white-space:pre-wrap;"></p><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="editOcFromView()">Edit</button><button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button></div></div></div></div>
+
     </div>
 
     <script>
@@ -247,11 +258,28 @@
         }
         async function updateProfile() { const username=document.getElementById('edit-username').value; const file=document.getElementById('edit-avatar').files[0]; let avatarUrl=null; if(file) avatarUrl=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const updates={id:user.id, username:username, updated_at:new Date()}; if(avatarUrl) updates.avatar_url=avatarUrl; await db.from('profiles').upsert(updates); alert("Saved!"); loadProfile(); }
 
-        // --- NEW CHAT LOGIC WITH AVATARS ---
+        // --- NAVIGATION LOGIC (FIXED) ---
+        function nav(id) {
+            // 1. Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // 2. Remove active state from all buttons
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            
+            // 3. Show target section
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active');
+            
+            // 4. Highlight target button
+            // If the ID is 'ocs', the button ID is 'btn-ocs', etc.
+            // Or just search by onclick attribute if we were lazy, but let's be precise:
+            // I added IDs to buttons in HTML for this.
+            const btn = document.getElementById('btn-' + id);
+            if(btn) btn.classList.add('active');
+        }
+
+        // --- CHAT LOGIC ---
         function initChat() {
             const chatBox = document.getElementById('chat-box');
-            
-            // Fetch messages JOINED with profiles to get avatar_url
             db.from('messages').select('*, profiles(avatar_url)').order('created_at', { ascending: false }).limit(50).then(({ data }) => {
                 chatBox.innerHTML = "";
                 if(data) {
@@ -259,19 +287,13 @@
                     scrollToBottom();
                 }
             });
-
-            // Listen for new messages
-            db.channel('public:messages')
-              .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-                  // Fetch the avatar for this new message sender
+            db.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
                   const { data: profile } = await db.from('profiles').select('avatar_url').eq('id', payload.new.user_id).single();
                   const fullMsg = { ...payload.new, profiles: profile };
                   appendMessage(fullMsg);
                   scrollToBottom();
-              })
-              .subscribe();
+              }).subscribe();
         }
-
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
@@ -279,35 +301,21 @@
             input.value = "";
             await db.from('messages').insert([{ user_id: user.id, username: myUsername, content: text }]);
         }
-
         function appendMessage(msg) {
             const box = document.getElementById('chat-box');
             const el = document.createElement('div');
             const isMe = msg.user_id === user.id;
             const avatar = (msg.profiles && msg.profiles.avatar_url) ? msg.profiles.avatar_url : null;
-            
             el.className = `msg-row ${isMe ? 'mine' : 'theirs'}`;
-            
             let html = '';
-            
-            // If Theirs, show name above
             if(!isMe) {
-                 html += `<div style="display:flex; flex-direction:column; max-width:75%;">
-                            <span class="msg-name">${msg.username}</span>
-                            <div style="display:flex; gap:8px; align-items:flex-end;">
-                                <div class="msg-avatar" style="${avatar ? `background-image:url('${avatar}')` : 'background:#333'}"></div>
-                                <div class="msg-bubble">${msg.content}</div>
-                            </div>
-                          </div>`;
+                 html += `<div style="display:flex; flex-direction:column; max-width:75%;"><span class="msg-name">${msg.username}</span><div style="display:flex; gap:8px; align-items:flex-end;"><div class="msg-avatar" style="${avatar ? `background-image:url('${avatar}')` : 'background:#333'}"></div><div class="msg-bubble">${msg.content}</div></div></div>`;
             } else {
-                // If Mine
                 html += `<div class="msg-bubble">${msg.content}</div>`;
             }
-            
             el.innerHTML = html;
             box.appendChild(el);
         }
-
         function scrollToBottom() {
             const box = document.getElementById('chat-box');
             setTimeout(() => box.scrollTop = box.scrollHeight, 100);
@@ -323,7 +331,7 @@
         async function searchWord() { const w=document.getElementById('dict-search').value.toLowerCase(); const resBox=document.getElementById('dict-result'); resBox.innerHTML='<div style="color:#888">Searching...</div>'; try{const dr=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);if(dr.ok){const d=await dr.json();let s="";if(d[0].meanings[0].synonyms.length>0)s=`<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;resBox.innerHTML=`<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${s}`;return;}}catch(e){} try{const wr=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);if(!wr.ok)throw new Error("Wiki not found");const wd=await wr.json();if(wd.type==='standard'||wd.type==='disambiguation'){const img=wd.thumbnail?`<img src="${wd.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">`:'';resBox.innerHTML=`${img}<h3 style="margin:0">${wd.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${wd.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;}else{resBox.innerHTML="No distinct result found.";}}catch(e){resBox.innerHTML=`<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;} }
         async function generatePrompt() { const g=document.getElementById('prompt-genre').value; if(!promptCache[g]){document.getElementById('prompt-result').innerText="Loading...";const{data}=await db.from('prompts').select('content').eq('genre',g);if(data&&data.length>0)promptCache[g]=data.map(i=>i.content);else promptCache[g]=["No prompts."];}const l=promptCache[g];document.getElementById('prompt-result').innerText=l[Math.floor(Math.random()*l.length)]; }
         async function generateNames() { const c=parseInt(document.getElementById('name-count').value); const g=document.getElementById('name-gender').value; const r=document.getElementById('name-result'); if(!nameCache[g]){r.innerText="Loading...";const{data}=await db.from('names').select('name').eq('gender',g);if(data&&data.length>0)nameCache[g]=data.map(i=>i.name);else nameCache[g]=["No names."];}const l=nameCache[g];const s=l.sort(()=>0.5-Math.random());r.innerText=s.slice(0,c).join(", "); }
-        function nav(id) { document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active')); }
+        
         window.onload = checkSession;
     </script>
 </body>
