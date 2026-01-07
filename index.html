@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V13.1 (Hybrid Dict)</title>
+    <title>writer V14.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -69,6 +69,13 @@
         .stat-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; background:#111; padding:15px; border-radius:10px; margin:20px 0; text-align:center; }
         .stat-box small { color:#666; font-size:0.7rem; text-transform:uppercase; }
         .stat-box span { display:block; font-weight:600; font-size:0.95rem; }
+        .theme-btn { 
+            background: linear-gradient(135deg, #1db954, #191919); 
+            color: #fff; border:none; padding:10px 15px; 
+            border-radius:30px; font-weight:600; 
+            display:inline-flex; align-items:center; gap:8px; 
+            text-decoration:none; font-size:0.9rem; margin-bottom:20px;
+        }
         
         /* --- MOBILE --- */
         @media(max-width:768px) {
@@ -216,10 +223,12 @@
                     <input type="text" id="form-age" placeholder="Age">
                     <input type="text" id="form-gender" placeholder="Gender / Pronouns">
                 </div>
-                <div class="form-section-title">Visuals</div>
+                <div class="form-section-title">Visuals & Audio</div>
                 <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Character Image</label>
                 <input type="file" id="form-image" accept="image/*">
                 <textarea id="form-desc" rows="3" placeholder="Physical Appearance / Style"></textarea>
+                <input type="text" id="form-song" placeholder="Theme Song URL (YouTube or Spotify)">
+                
                 <div class="form-section-title">Inner World</div>
                 <textarea id="form-personality" rows="3" placeholder="Personality Traits & Flaws"></textarea>
                 <input type="text" id="form-goals" placeholder="Core Goal / Motivation">
@@ -231,6 +240,7 @@
                 </div>
             </div>
         </div>
+        
         <!-- OC VIEW MODAL -->
         <div id="oc-view-modal">
             <div class="view-content">
@@ -239,6 +249,9 @@
                 <div class="view-body">
                     <h2 id="view-name" style="margin:0 0 5px 0;">Name</h2>
                     <p id="view-role" style="color:#888; margin:0 0 20px 0; font-size:1.1rem;">Role</p>
+                    
+                    <div id="view-song-container"></div> <!-- Song Button appears here -->
+
                     <div class="stat-grid">
                         <div class="stat-box"><small>Age</small><span id="view-age">-</span></div>
                         <div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div>
@@ -351,8 +364,29 @@
             document.getElementById('view-desc').innerText = oc.desc || "No physical description.";
             document.getElementById('view-personality').innerText = oc.personality || "No personality details.";
             document.getElementById('view-lore').innerText = oc.lore || "No backstory logged.";
+            
             const imgHeader = document.getElementById('view-img');
             if(oc.image) { imgHeader.style.backgroundImage = `url('${oc.image}')`; imgHeader.style.display = 'block'; } else { imgHeader.style.display = 'none'; }
+            
+            // SONG LOGIC
+            const songContainer = document.getElementById('view-song-container');
+            songContainer.innerHTML = "";
+            if(oc.theme_song) {
+                // If YouTube, embed it
+                if(oc.theme_song.includes('youtube.com') || oc.theme_song.includes('youtu.be')) {
+                    let vId = oc.theme_song.split('v=')[1];
+                    if(!vId && oc.theme_song.includes('youtu.be')) vId = oc.theme_song.split('/').pop();
+                    if(vId) {
+                         const ampersandPosition = vId.indexOf('&');
+                         if(ampersandPosition !== -1) vId = vId.substring(0, ampersandPosition);
+                         songContainer.innerHTML = `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:12px; margin-bottom:20px;"></iframe>`;
+                    }
+                } else {
+                    // Standard Link Button
+                    songContainer.innerHTML = `<a href="${oc.theme_song}" target="_blank" class="theme-btn">▶ Play Theme Song</a>`;
+                }
+            }
+            
             document.getElementById('oc-view-modal').style.display = 'flex';
         }
         function openOcForm(isEdit = false) {
@@ -363,6 +397,7 @@
                 document.getElementById('form-age').value = currentOc.age; document.getElementById('form-gender').value = currentOc.gender;
                 document.getElementById('form-desc').value = currentOc.desc; document.getElementById('form-personality').value = currentOc.personality;
                 document.getElementById('form-goals').value = currentOc.goals; document.getElementById('form-lore').value = currentOc.lore;
+                document.getElementById('form-song').value = currentOc.theme_song || "";
             } else {
                 document.getElementById('form-title').innerText = "New Character"; document.getElementById('form-id').value = "";
                 document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i => i.value = "");
@@ -378,7 +413,8 @@
                 user_id: user.id, name: name, role: document.getElementById('form-role').value,
                 age: document.getElementById('form-age').value, gender: document.getElementById('form-gender').value,
                 "desc": document.getElementById('form-desc').value, personality: document.getElementById('form-personality').value,
-                goals: document.getElementById('form-goals').value, lore: document.getElementById('form-lore').value
+                goals: document.getElementById('form-goals').value, lore: document.getElementById('form-lore').value,
+                theme_song: document.getElementById('form-song').value
             };
             if(imageBase64) ocData.image = imageBase64;
             if(id) await db.from('characters').update(ocData).eq('id', id); else await db.from('characters').insert([ocData]);
@@ -395,46 +431,25 @@
             const w = document.getElementById('dict-search').value.toLowerCase();
             const resBox = document.getElementById('dict-result');
             resBox.innerHTML = '<div style="color:#888">Searching...</div>';
-            
-            // 1. Try DICTIONARY First (Definitions)
             try {
                 const dictReq = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);
                 if(dictReq.ok) {
                     const d = await dictReq.json();
                     let syns = "";
                     if(d[0].meanings[0].synonyms.length > 0) syns = `<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;
-                    
-                    resBox.innerHTML = `
-                        <h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3>
-                        <small style="color:#666">${d[0].meanings[0].partOfSpeech}</small>
-                        <p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>
-                        ${syns}
-                    `;
-                    return; // Stop if we found a definition
+                    resBox.innerHTML = `<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${syns}`;
+                    return;
                 }
-            } catch(e) { console.log("Dict failed, trying Wiki..."); }
-
-            // 2. Fallback to WIKIPEDIA (Concepts / Lore / People)
+            } catch(e) { }
             try {
                 const wikiReq = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);
                 if(!wikiReq.ok) throw new Error("Wiki not found");
                 const data = await wikiReq.json();
-                
                 if (data.type === 'standard' || data.type === 'disambiguation') {
                     const img = data.thumbnail ? `<img src="${data.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">` : '';
-                    resBox.innerHTML = `
-                        ${img}
-                        <h3 style="margin:0">${data.title}</h3>
-                        <p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${data.extract}</p>
-                        <div style="clear:both;"></div>
-                        <small style="color:#666">Source: Wikipedia</small>
-                    `;
-                } else {
-                     resBox.innerHTML = "No distinct result found.";
-                }
-            } catch(e) {
-                resBox.innerHTML = `<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;
-            }
+                    resBox.innerHTML = `${img}<h3 style="margin:0">${data.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${data.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;
+                } else { resBox.innerHTML = "No distinct result found."; }
+            } catch(e) { resBox.innerHTML = `<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`; }
         }
 
         // --- DB TOOLS ---
