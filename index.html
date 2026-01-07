@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V7.0 (Cloud)</title>
+    <title>Writer V7.2 (Live)</title>
     
-    <!-- SUPABASE SDK (The Magic Library) -->
+    <!-- SUPABASE SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- FONTS -->
@@ -37,16 +37,13 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: 30px;
         }
-        .auth-box {
-            width: 100%; max-width: 400px; text-align: center;
-        }
+        .auth-box { width: 100%; max-width: 400px; text-align: center; }
 
         /* --- SIDEBAR --- */
         .sidebar {
             width: 260px; height: 100%; background: var(--sidebar-bg);
             border-right: 1px solid var(--border); display: flex; flex-direction: column;
-            padding: 30px 20px; flex-shrink: 0; z-index: 100;
-            position: relative;
+            padding: 30px 20px; flex-shrink: 0; z-index: 100; position: relative;
         }
         .logo { font-size: 1.5rem; font-weight: 700; margin-bottom: 50px; color: white; padding-left: 10px; }
         .menu-btn {
@@ -71,363 +68,16 @@
         /* --- UI ELEMENTS --- */
         h2 { font-weight: 700; font-size: 2rem; margin: 0 0 10px 0; letter-spacing: -1px; }
         .subtitle { color: var(--text-dim); margin-bottom: 40px; font-weight: 400; font-size: 1rem; }
-        
         input, select, textarea {
             background: var(--card-bg); border: 1px solid var(--border); color: white;
             padding: 16px; border-radius: 10px; width: 100%; margin-bottom: 20px;
             font-family: 'Inter', sans-serif; font-size: 16px; appearance: none;
         }
-        button.action-btn {
-            background: white; color: black; border: none; padding: 14px 28px;
-            border-radius: 50px; cursor: pointer; font-weight: 600; width: 100%;
-        }
-        button.secondary-btn {
-            background: rgba(255,255,255,0.05); color: #ccc; 
-            border: 1px solid var(--border); padding: 8px 16px;
-            border-radius: 20px; cursor: pointer; font-size: 0.85rem; margin-top: 15px;
-        }
-        
+        button.action-btn { background: white; color: black; border: none; padding: 14px 28px; border-radius: 50px; cursor: pointer; font-weight: 600; width: 100%; }
+        button.secondary-btn { background: rgba(255,255,255,0.05); color: #ccc; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; margin-top: 15px; }
+
         /* --- OC GRID --- */
         .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .oc-card {
-            border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg);
-            cursor: pointer; overflow: hidden; height: 260px; display: flex; flex-direction: column;
-        }
+        .oc-card { border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg); cursor: pointer; overflow: hidden; height: 260px; display: flex; flex-direction: column; }
         .oc-card-img { height: 150px; background: #1a1a1a center/cover; }
-        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border); }
-        .oc-card h3 { margin: 0; font-size: 1rem; font-weight: 600; }
-        .oc-card small { color: #666; margin-top: 4px; display: block; font-weight: 400; font-size: 0.85rem; }
-
-        /* --- MODAL --- */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999999; justify-content: center; align-items: center; padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #0a0a0a; border: 1px solid #333; border-radius: 16px;
-            width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; position: relative;
-        }
-        .modal-header-img { height: 200px; background: #222 center/cover; }
-        .modal-body { padding: 30px; }
-        .close-btn {
-            position: absolute; top: 15px; right: 15px; width: 32px; height: 32px;
-            background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center;
-        }
-
-        /* --- MOBILE --- */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .main-content { padding: 20px; padding-top: calc(20px + var(--safe-top)); padding-bottom: calc(90px + var(--safe-bottom)); width: 100%; }
-            .sidebar {
-                width: 100%; height: auto; min-height: 60px; position: fixed; bottom: 0; left: 0;
-                flex-direction: row; justify-content: space-evenly; align-items: center;
-                padding: 10px 10px calc(10px + var(--safe-bottom)) 10px;
-                border-right: none; border-top: 1px solid var(--border); background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(15px);
-            }
-            .logo { display: none; }
-            .menu-btn { padding: 8px 5px; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
-            .modal-content { width: 95%; max-height: 80dvh; }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- AUTH SCREEN -->
-    <div id="auth-screen">
-        <div class="auth-box">
-            <h1 style="font-weight: 700; letter-spacing: -1px; margin-bottom: 10px;">writer.</h1>
-            <p style="color: #888; margin-bottom: 30px;">Sign in to sync your characters.</p>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
-            <button class="action-btn" onclick="handleLogin()">Sign In / Sign Up</button>
-            <p id="auth-msg" style="margin-top: 20px; color: #ff5555; font-size: 0.9rem;"></p>
-        </div>
-    </div>
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <div class="logo">writer.</div>
-        <button class="menu-btn active" onclick="showSection('home')">Dash</button>
-        <button class="menu-btn" onclick="showSection('dictionary')">Dict</button>
-        <button class="menu-btn" onclick="showSection('oc-creator')">OCs</button>
-        <button class="menu-btn" onclick="showSection('prompts')">Prompts</button>
-        <button class="menu-btn" onclick="showSection('names')">Names</button>
-        <button class="menu-btn" onclick="handleLogout()" style="margin-top:auto; color: #ff5555;">Log Out</button>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        <!-- HOME -->
-        <div id="home" class="section active">
-            <h2>Dashboard</h2>
-            <p class="subtitle">Cloud Sync Active.</p>
-            <div style="background: linear-gradient(145deg, #111, #0a0a0a); padding: 30px; border-radius: 16px; border: 1px solid var(--border);">
-                <p style="font-weight: 300; font-size: 1.2rem; line-height: 1.5; margin: 0 0 15px; color: #eee;">"There is no greater agony than bearing an untold story inside you."</p>
-                <small style="color: var(--text-dim);">— Maya Angelou</small>
-            </div>
-        </div>
-
-        <!-- OC CREATOR -->
-        <div id="oc-creator" class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-                <div><h2>Characters</h2><p class="subtitle" style="margin-bottom:0">Stored in Cloud.</p></div>
-                <button class="action-btn" onclick="openOCForm()" style="width: auto;">+ New</button>
-            </div>
-            
-            <div id="oc-form" style="display:none; background: #111; padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid var(--border);">
-                <h3 style="margin-top:0; font-weight:600; margin-bottom: 20px;">Character Sheet</h3>
-                <input type="hidden" id="oc-id">
-                <input type="text" id="oc-name" placeholder="Full Name (Required)">
-                <input type="file" id="oc-image" accept="image/*" style="padding: 10px 0; background: transparent; border: none;">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <input type="text" id="oc-role" placeholder="Role">
-                    <input type="text" id="oc-age" placeholder="Age">
-                    <input type="text" id="oc-gender" placeholder="Pronouns">
-                    <input type="text" id="oc-goals" placeholder="Goal">
-                </div>
-                <textarea id="oc-desc" rows="3" placeholder="Appearance"></textarea>
-                <textarea id="oc-personality" rows="3" placeholder="Personality"></textarea>
-                <textarea id="oc-lore" rows="4" placeholder="Backstory"></textarea>
-                <div style="display:flex; gap:10px;">
-                    <button class="action-btn" onclick="saveOC()">Save to Cloud</button>
-                    <button class="secondary-btn" onclick="closeOCForm()" style="margin-top:0; border: none;">Cancel</button>
-                </div>
-            </div>
-            <div id="oc-list" class="oc-grid"><p style="color:#666;">Loading characters...</p></div>
-        </div>
-
-        <!-- DICTIONARY, PROMPTS, NAMES (Hidden for brevity, same as V6) -->
-        <div id="dictionary" class="section"><h2>Dictionary</h2><input type="text" id="dict-search" placeholder="Type word..." onkeypress="if(event.key==='Enter') searchWord()"><button class="action-btn" onclick="searchWord()">Search</button><div id="dict-result" class="result-box" style="margin-top:20px;"></div></div>
-        <div id="prompts" class="section"><h2>Prompts</h2><button class="action-btn" onclick="generatePrompt()">Generate Idea</button><div id="prompt-result" class="result-box" style="margin-top:20px; font-size:1.2rem;"></div></div>
-        <div id="names" class="section"><h2>Names</h2><button class="action-btn" onclick="generateNames()">Generate Names</button><div id="name-result" class="result-box" style="margin-top:20px;"></div></div>
-    </div>
-
-    <!-- OC MODAL -->
-    <div id="oc-modal" class="modal-overlay" onclick="if(event.target.id==='oc-modal') closeModalBtn()">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModalBtn()">×</button>
-            <div id="modal-img-header" class="modal-header-img"></div>
-            <div class="modal-body">
-                <h2 id="modal-name"></h2><p id="modal-role" style="color:#888;"></p>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; background:#111; padding:15px; border-radius:10px; margin:20px 0;">
-                    <div><small>AGE</small><br><span id="modal-age"></span></div>
-                    <div><small>GENDER</small><br><span id="modal-gender"></span></div>
-                    <div style="grid-column:1/-1"><small>GOAL</small><br><span id="modal-goals"></span></div>
-                </div>
-                <p id="modal-desc" style="color:#ccc; line-height:1.6;"></p>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button class="secondary-btn" onclick="editCurrentOC()" style="flex:1; margin:0;">Edit</button>
-                    <button class="action-btn" onclick="deleteOC()" style="flex:1; background:rgba(255,50,50,0.1); color:#ff5555;">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- 1. CONFIGURATION ---
-        const SUPABASE_URL = 'https://icotzotkvdzytrrxtudq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let user = null;
-        let localOCs = []; // Local cache of cloud data
-
-        // --- 2. AUTHENTICATION ---
-        async function checkSession() {
-            const { data } = await supabase.auth.getSession();
-            if (data.session) {
-                user = data.session.user;
-                document.getElementById('auth-screen').style.display = 'none';
-                loadOCs(); // Load data once logged in
-            } else {
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
-        }
-
-        async function handleLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const msg = document.getElementById('auth-msg');
-            msg.innerText = "Processing...";
-
-            // Try to Sign In
-            let { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                // If user doesn't exist, try Sign Up
-                if(error.message.includes("Invalid login")) {
-                    let { data: upData, error: upError } = await supabase.auth.signUp({ email, password });
-                    if(upError) { msg.innerText = upError.message; }
-                    else { msg.innerText = "Account created! Check your email to confirm."; }
-                } else {
-                    msg.innerText = error.message;
-                }
-            } else {
-                window.location.reload();
-            }
-        }
-
-        async function handleLogout() {
-            await supabase.auth.signOut();
-            window.location.reload();
-        }
-
-        // --- 3. DATABASE OPERATIONS ---
-        async function loadOCs() {
-            const list = document.getElementById('oc-list');
-            list.innerHTML = "<p style='color:#666;'>Syncing...</p>";
-            
-            // Fetch from Supabase
-            const { data, error } = await supabase.from('characters').select('*').order('id', { ascending: false });
-            
-            if (error) {
-                console.error(error);
-                list.innerHTML = "<p style='color:red'>Error syncing.</p>";
-                return;
-            }
-
-            localOCs = data || [];
-            renderList();
-        }
-
-        function renderList() {
-            const list = document.getElementById('oc-list');
-            list.innerHTML = "";
-            if(localOCs.length === 0) {
-                list.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; border: 2px dashed #222; border-radius: 16px; color:#666;">No characters found.</div>`;
-                return;
-            }
-            localOCs.forEach((oc, index) => {
-                const card = document.createElement('div');
-                card.className = 'oc-card';
-                card.onclick = () => openOCModal(index);
-                const bg = oc.image ? `background-image: url('${oc.image}')` : `background-color: #222`;
-                card.innerHTML = `<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role || 'No Role'}</small></div>`;
-                list.appendChild(card);
-            });
-        }
-
-        async function saveOC() {
-            const name = document.getElementById('oc-name').value;
-            if(!name) return alert("Name required");
-            
-            const file = document.getElementById('oc-image').files[0];
-            let imageBase64 = null;
-
-            if(file) {
-                // Convert image to base64 string for simple storage
-                imageBase64 = await new Promise(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            const newOC = {
-                user_id: user.id, // Link to current user
-                name: name,
-                role: document.getElementById('oc-role').value,
-                age: document.getElementById('oc-age').value,
-                gender: document.getElementById('oc-gender').value,
-                goals: document.getElementById('oc-goals').value,
-                desc: document.getElementById('oc-desc').value,
-                personality: document.getElementById('oc-personality').value,
-                lore: document.getElementById('oc-lore').value,
-                image: imageBase64 // Note: For production, use Supabase Storage buckets, but this works for small scale
-            };
-
-            const id = document.getElementById('oc-id').value;
-            
-            if (id) {
-                // Update existing
-                // If no new image, keep old one (logic handled in backend usually, but here we merge)
-                if(!imageBase64) delete newOC.image; 
-                await supabase.from('characters').update(newOC).eq('id', id);
-            } else {
-                // Create new
-                await supabase.from('characters').insert([newOC]);
-            }
-
-            closeOCForm();
-            loadOCs(); // Refresh list
-            if(document.getElementById('oc-modal').style.display === 'flex') closeModalBtn();
-        }
-
-        async function deleteOC() {
-            if(!confirm("Delete this character?")) return;
-            const id = localOCs[currentOCIndex].id;
-            await supabase.from('characters').delete().eq('id', id);
-            closeModalBtn();
-            loadOCs();
-        }
-
-        // --- 4. UI LOGIC (Same as V6) ---
-        let currentOCIndex = null;
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(event) event.target.classList.add('active');
-        }
-        function openOCForm() { 
-            document.getElementById('oc-form').style.display = 'block'; 
-            document.getElementById('oc-id').value = ""; // Clear ID for new
-            document.querySelectorAll('input, textarea').forEach(i => i.value = ""); // Clear inputs
-        }
-        function closeOCForm() { document.getElementById('oc-form').style.display = 'none'; }
-        
-        function openOCModal(idx) {
-            currentOCIndex = idx;
-            const oc = localOCs[idx];
-            document.getElementById('modal-name').innerText = oc.name;
-            document.getElementById('modal-role').innerText = oc.role;
-            document.getElementById('modal-age').innerText = oc.age;
-            document.getElementById('modal-gender').innerText = oc.gender;
-            document.getElementById('modal-goals').innerText = oc.goals;
-            document.getElementById('modal-desc').innerText = oc.desc;
-            
-            const h = document.getElementById('modal-img-header');
-            if(oc.image) { h.style.backgroundImage = `url('${oc.image}')`; h.style.display='block'; }
-            else { h.style.display='none'; }
-            
-            document.getElementById('oc-modal').style.display = 'flex';
-        }
-        
-        function closeModalBtn() { document.getElementById('oc-modal').style.display = 'none'; }
-        
-        function editCurrentOC() {
-            const oc = localOCs[currentOCIndex];
-            document.getElementById('oc-id').value = oc.id;
-            document.getElementById('oc-name').value = oc.name;
-            document.getElementById('oc-role').value = oc.role;
-            document.getElementById('oc-age').value = oc.age;
-            document.getElementById('oc-gender').value = oc.gender;
-            document.getElementById('oc-goals').value = oc.goals;
-            document.getElementById('oc-desc').value = oc.desc;
-            document.getElementById('oc-personality').value = oc.personality;
-            document.getElementById('oc-lore').value = oc.lore;
-            closeModalBtn(); 
-            document.getElementById('oc-form').style.display = 'block';
-        }
-
-        // --- UTILS (Prompts/Dict/Names) ---
-        // (Simplified for this version to focus on Cloud Sync)
-        function generatePrompt() { document.getElementById('prompt-result').innerText = "A ghost falls in love with a ghost hunter."; }
-        function generateNames() { document.getElementById('name-result').innerText = "Rowan, Sage, River"; }
-        async function searchWord() {
-            const w = document.getElementById('dict-search').value;
-            try {
-                const req = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);
-                const d = await req.json();
-                document.getElementById('dict-result').innerHTML = `<b>${d[0].word}</b>: ${d[0].meanings[0].definitions[0].definition}`;
-            } catch(e) { document.getElementById('dict-result').innerText = "Not found."; }
-        }
-
-        // --- INIT ---
-        window.onload = checkSession;
-
-    </script>
-</body>
-</html>
+        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border);
