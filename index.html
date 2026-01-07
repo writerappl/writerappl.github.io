@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V8.2 (Refined)</title>
+    <title>Writer V9.0 (Vast)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -22,12 +22,13 @@
         .menu-btn.active { background:rgba(255,255,255,0.1); color:#fff; font-weight:600; }
         
         .main-content { flex:1; overflow-y:auto; padding:50px; padding-top:calc(50px + var(--safe-top)); }
-        .section { display:none; max-width:800px; margin:0 auto; animation:fadeIn 0.3s ease; }
+        .section { display:none; max-width:900px; margin:0 auto; animation:fadeIn 0.3s ease; }
         .section.active { display:block; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
         /* --- COMPONENTS --- */
         input, textarea, select { background:var(--card); border:1px solid var(--border); color:#fff; padding:15px; border-radius:10px; width:100%; margin-bottom:15px; font-family:'Inter'; font-size:16px; appearance:none; }
+        input:focus, textarea:focus { border-color: #555; }
         button.btn { background:#fff; color:#000; border:none; padding:12px 25px; border-radius:50px; font-weight:600; cursor:pointer; width:100%; transition:0.2s; }
         button.btn:hover { transform:translateY(-2px); }
         button.btn-sec { background:rgba(255,255,255,0.05); color:#ccc; border:1px solid var(--border); padding:8px 16px; border-radius:20px; font-size:0.85rem; cursor:pointer; margin-top:10px; }
@@ -41,10 +42,30 @@
         /* --- AUTH SCREEN --- */
         #auth-screen { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
 
-        /* --- OC MODAL --- */
-        #oc-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px); }
-        .modal-content { background:#0a0a0a; border:1px solid #333; border-radius:16px; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; padding:30px; position:relative; }
-        .close-btn { position:absolute; top:15px; right:15px; width:30px; height:30px; background:rgba(255,255,255,0.1); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+        /* --- OC GRID --- */
+        .oc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .oc-card { border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg); cursor: pointer; overflow: hidden; height: 280px; display: flex; flex-direction: column; transition:0.2s; }
+        .oc-card:hover { border-color: #444; transform:translateY(-2px); }
+        .oc-card-img { height: 160px; background: #1a1a1a center/cover; }
+        .oc-card-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--border); }
+        .oc-card h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+        .oc-card small { color: #666; margin-top: 4px; display: block; font-weight: 400; font-size: 0.85rem; }
+
+        /* --- VAST OC FORM --- */
+        #oc-form-modal { display:none; position:fixed; inset:0; background:#000; z-index:200; padding:20px; overflow-y:auto; }
+        .form-container { max-width:700px; margin:0 auto; padding-bottom:50px; }
+        .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
+        .form-section-title { color:#666; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-top:20px; margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px; }
+
+        /* --- OC VIEW MODAL --- */
+        #oc-view-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px); }
+        .view-content { background:#0a0a0a; border:1px solid #333; border-radius:16px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative; display:flex; flex-direction:column; }
+        .view-header-img { height:200px; background:#222 center/cover; flex-shrink:0; }
+        .view-body { padding:30px; }
+        .close-btn { position:absolute; top:15px; right:15px; width:32px; height:32px; background:rgba(0,0,0,0.6); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:50%; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; z-index:10; }
+        .stat-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; background:#111; padding:15px; border-radius:10px; margin:20px 0; text-align:center; }
+        .stat-box small { color:#666; font-size:0.7rem; text-transform:uppercase; }
+        .stat-box span { display:block; font-weight:600; font-size:0.95rem; }
         
         /* --- MOBILE --- */
         @media(max-width:768px) {
@@ -55,6 +76,7 @@
             .logo { display:none; }
             .menu-btn { padding:8px; justify-content:center; font-size:0.75rem; text-align:center; flex-direction:column; gap:4px; }
             .main-content { padding:20px; padding-bottom:100px; }
+            .form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -125,10 +147,10 @@
         <!-- CHARACTERS -->
         <div id="ocs" class="section">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h2>Characters</h2>
-                <button class="btn" onclick="openOcForm()" style="width:auto; padding:10px 20px;">+ New</button>
+                <h2>Character Vault</h2>
+                <button class="btn" onclick="openOcForm()" style="width:auto; padding:10px 20px;">+ New Character</button>
             </div>
-            <div id="oc-list" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:15px;"></div>
+            <div id="oc-list" class="oc-grid"></div>
         </div>
 
         <!-- DICTIONARY -->
@@ -181,28 +203,71 @@
             </div>
         </div>
         
-        <!-- OC FORM (Create) -->
-        <div id="oc-form" style="display:none; position:fixed; inset:0; background:#000; z-index:200; padding:20px; overflow-y:auto;">
-            <div style="max-width:600px; margin:0 auto;">
-                <h2>New Character</h2>
-                <input type="text" id="create-name" placeholder="Name">
-                <input type="text" id="create-role" placeholder="Role">
-                <textarea id="create-desc" rows="3" placeholder="Description"></textarea>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn" onclick="saveOc()">Save</button>
-                    <button class="btn-sec" onclick="document.getElementById('oc-form').style.display='none'">Cancel</button>
+        <!-- VAST OC FORM (Create/Edit) -->
+        <div id="oc-form-modal">
+            <div class="form-container">
+                <h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2>
+                <input type="hidden" id="form-id"> <!-- ID for editing -->
+                
+                <div class="form-section-title">Identity</div>
+                <div class="form-grid">
+                    <input type="text" id="form-name" placeholder="Full Name (Required)">
+                    <input type="text" id="form-role" placeholder="Role / Archetype">
+                </div>
+                <div class="form-grid">
+                    <input type="text" id="form-age" placeholder="Age">
+                    <input type="text" id="form-gender" placeholder="Gender / Pronouns">
+                </div>
+
+                <div class="form-section-title">Visuals</div>
+                <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Character Image</label>
+                <input type="file" id="form-image" accept="image/*">
+                <textarea id="form-desc" rows="3" placeholder="Physical Appearance / Style"></textarea>
+
+                <div class="form-section-title">Inner World</div>
+                <textarea id="form-personality" rows="3" placeholder="Personality Traits & Flaws"></textarea>
+                <input type="text" id="form-goals" placeholder="Core Goal / Motivation">
+
+                <div class="form-section-title">History</div>
+                <textarea id="form-lore" rows="6" placeholder="Backstory / Lore"></textarea>
+
+                <div style="display:flex; gap:10px; margin-top:30px;">
+                    <button class="btn" onclick="saveOc()">Save Character</button>
+                    <button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button>
                 </div>
             </div>
         </div>
 
-        <!-- OC MODAL (View/Delete) -->
-        <div id="oc-modal">
-            <div class="modal-content">
-                <div class="close-btn" onclick="document.getElementById('oc-modal').style.display='none'">×</div>
-                <h2 id="modal-title">Name</h2>
-                <p id="modal-role" style="color:#888; margin-top:-10px;">Role</p>
-                <p id="modal-desc" style="line-height:1.6; color:#ccc;"></p>
-                <button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533; width:100%; margin-top:30px;">Delete Character</button>
+        <!-- OC VIEW MODAL -->
+        <div id="oc-view-modal">
+            <div class="view-content">
+                <div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div>
+                <div id="view-img" class="view-header-img"></div>
+                
+                <div class="view-body">
+                    <h2 id="view-name" style="margin:0 0 5px 0;">Name</h2>
+                    <p id="view-role" style="color:#888; margin:0 0 20px 0; font-size:1.1rem;">Role</p>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-box"><small>Age</small><span id="view-age">-</span></div>
+                        <div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div>
+                        <div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div>
+                    </div>
+
+                    <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Appearance</h4>
+                    <p id="view-desc" style="color:#ccc; line-height:1.6; margin-top:0;"></p>
+                    
+                    <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Personality</h4>
+                    <p id="view-personality" style="color:#ccc; line-height:1.6; margin-top:0;"></p>
+
+                    <h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem; letter-spacing:1px;">Lore</h4>
+                    <p id="view-lore" style="color:#ccc; line-height:1.6; margin-top:0; white-space: pre-wrap;"></p>
+
+                    <div style="display:flex; gap:10px; margin-top:30px;">
+                        <button class="btn" onclick="editOcFromView()">Edit Character</button>
+                        <button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -214,7 +279,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imljb3R6b3RrdmR6eXRycnh0dWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTg1MDksImV4cCI6MjA4MzM3NDUwOX0.MhnSU6RroQKSOykB3LogU16hKw8Y56kmaHDc_BfYyQg';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let user = null;
-        let currentOcId = null;
+        let currentOc = null; // Stores full object of currently viewed OC
 
         // --- AUTH ---
         async function checkSession() {
@@ -228,15 +293,39 @@
                 document.getElementById('auth-screen').style.display = 'flex';
             }
         }
+        
         async function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            let { error } = await db.auth.signInWithPassword({ email, password });
+            const msg = document.getElementById('auth-msg');
+            msg.innerText = "Processing...";
+
+            // 1. Try to Login
+            let { data, error } = await db.auth.signInWithPassword({ email, password });
+            
             if (error) {
-                let { error: upError } = await db.auth.signUp({ email, password });
-                if(upError) document.getElementById('auth-msg').innerText = upError.message;
-                else location.reload();
-            } else location.reload();
+                if(error.message.includes("Invalid login")) {
+                    // 2. If login fails, try to Sign Up to see if user exists
+                    let { error: upError } = await db.auth.signUp({ email, password });
+                    
+                    if(upError) {
+                        // If Sign Up also fails (e.g. "User already registered"), then it WAS a wrong password
+                        if(upError.message.includes("already registered") || upError.message.includes("unique constraint")) {
+                            msg.innerText = "Incorrect password.";
+                        } else {
+                            msg.innerText = upError.message;
+                        }
+                    } else {
+                        // If Sign Up worked, then it was a new user
+                        msg.innerText = "Account created! Logging in...";
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    msg.innerText = error.message;
+                }
+            } else {
+                location.reload();
+            }
         }
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
@@ -269,35 +358,121 @@
 
         // --- CHARACTERS ---
         async function loadOcs() {
-            const { data } = await db.from('characters').select('*');
+            const { data } = await db.from('characters').select('*').order('id', {ascending:false});
             const list = document.getElementById('oc-list');
             list.innerHTML = "";
             (data||[]).forEach(oc => {
                 const el = document.createElement('div');
-                el.style.cssText = "background:#111; border:1px solid #333; border-radius:10px; padding:15px; height:150px; cursor:pointer;";
-                el.innerHTML = `<h3>${oc.name}</h3><small style='color:#888'>${oc.role}</small>`;
-                el.onclick = () => openModal(oc); // CLICK EVENT ADDED
+                el.className = 'oc-card';
+                el.onclick = () => openViewModal(oc);
+                
+                const bg = oc.image ? `background-image: url('${oc.image}')` : `background-color: #222`;
+                el.innerHTML = `
+                    <div class="oc-card-img" style="${bg}"></div>
+                    <div class="oc-card-info">
+                        <h3>${oc.name}</h3>
+                        <small>${oc.role || 'No Role'}</small>
+                    </div>`;
                 list.appendChild(el);
             });
         }
-        function openModal(oc) {
-            currentOcId = oc.id;
-            document.getElementById('modal-title').innerText = oc.name;
-            document.getElementById('modal-role').innerText = oc.role;
-            document.getElementById('modal-desc').innerText = oc.desc;
-            document.getElementById('oc-modal').style.display = 'flex';
+
+        // 1. VIEW
+        function openViewModal(oc) {
+            currentOc = oc; // Save for editing/deleting
+            document.getElementById('view-name').innerText = oc.name;
+            document.getElementById('view-role').innerText = oc.role || "Unknown Role";
+            document.getElementById('view-age').innerText = oc.age || "-";
+            document.getElementById('view-gender').innerText = oc.gender || "-";
+            document.getElementById('view-goal').innerText = oc.goals || "-";
+            document.getElementById('view-desc').innerText = oc.desc || "No physical description.";
+            document.getElementById('view-personality').innerText = oc.personality || "No personality details.";
+            document.getElementById('view-lore').innerText = oc.lore || "No backstory logged.";
+            
+            const imgHeader = document.getElementById('view-img');
+            if(oc.image) {
+                imgHeader.style.backgroundImage = `url('${oc.image}')`;
+                imgHeader.style.display = 'block';
+            } else {
+                imgHeader.style.display = 'none';
+            }
+            
+            document.getElementById('oc-view-modal').style.display = 'flex';
         }
+
+        // 2. CREATE / EDIT FORM
+        function openOcForm(isEdit = false) {
+            document.getElementById('oc-form-modal').style.display = 'block';
+            
+            if(isEdit && currentOc) {
+                // Pre-fill for editing
+                document.getElementById('form-title').innerText = "Edit Character";
+                document.getElementById('form-id').value = currentOc.id;
+                document.getElementById('form-name').value = currentOc.name;
+                document.getElementById('form-role').value = currentOc.role;
+                document.getElementById('form-age').value = currentOc.age;
+                document.getElementById('form-gender').value = currentOc.gender;
+                document.getElementById('form-desc').value = currentOc.desc;
+                document.getElementById('form-personality').value = currentOc.personality;
+                document.getElementById('form-goals').value = currentOc.goals;
+                document.getElementById('form-lore').value = currentOc.lore;
+            } else {
+                // Clear for new
+                document.getElementById('form-title').innerText = "New Character";
+                document.getElementById('form-id').value = "";
+                document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i => i.value = "");
+            }
+        }
+
+        function editOcFromView() {
+            document.getElementById('oc-view-modal').style.display = 'none';
+            openOcForm(true);
+        }
+
         async function saveOc() {
-            const name = document.getElementById('create-name').value;
-            const role = document.getElementById('create-role').value;
-            const desc = document.getElementById('create-desc').value;
-            await db.from('characters').insert([{ user_id: user.id, name, role, "desc": desc }]);
-            document.getElementById('oc-form').style.display='none'; loadOcs();
+            const id = document.getElementById('form-id').value;
+            const name = document.getElementById('form-name').value;
+            if(!name) return alert("Name is required");
+
+            const file = document.getElementById('form-image').files[0];
+            let imageBase64 = null;
+            if(file) {
+                imageBase64 = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const ocData = {
+                user_id: user.id,
+                name: name,
+                role: document.getElementById('form-role').value,
+                age: document.getElementById('form-age').value,
+                gender: document.getElementById('form-gender').value,
+                "desc": document.getElementById('form-desc').value, // Matches "desc" column
+                personality: document.getElementById('form-personality').value,
+                goals: document.getElementById('form-goals').value,
+                lore: document.getElementById('form-lore').value
+            };
+            if(imageBase64) ocData.image = imageBase64;
+
+            if(id) {
+                // UPDATE
+                await db.from('characters').update(ocData).eq('id', id);
+            } else {
+                // INSERT
+                await db.from('characters').insert([ocData]);
+            }
+
+            document.getElementById('oc-form-modal').style.display='none';
+            loadOcs();
         }
+
         async function deleteOc() {
-            if(!confirm("Delete this character?")) return;
-            await db.from('characters').delete().eq('id', currentOcId);
-            document.getElementById('oc-modal').style.display='none';
+            if(!confirm("Delete this character? This cannot be undone.")) return;
+            await db.from('characters').delete().eq('id', currentOc.id);
+            document.getElementById('oc-view-modal').style.display='none';
             loadOcs();
         }
 
@@ -328,7 +503,6 @@
         function generateNames() {
             const count = parseInt(document.getElementById('name-count').value);
             const names = ["Rowan", "Sage", "River", "Alex", "Quinn", "Jordan", "Casey", "Riley", "Avery", "Cameron", "Dakota", "Ellis", "Emerson", "Finley", "Gray", "Harley", "Hayden", "Jamie", "Jesse", "Kendall"];
-            // Shuffle and slice
             const result = names.sort(() => 0.5 - Math.random()).slice(0, count).join(", ");
             document.getElementById('name-result').innerText = result;
         }
@@ -338,13 +512,6 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            // event.currentTarget.classList.add('active'); 
-        }
-        function openOcForm() { 
-            document.getElementById('oc-form').style.display='block'; 
-            document.getElementById('create-name').value = "";
-            document.getElementById('create-role').value = "";
-            document.getElementById('create-desc').value = "";
         }
 
         window.onload = checkSession;
