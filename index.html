@@ -56,13 +56,16 @@
         .msg-row.theirs .msg-bubble { background:#262626; color:#fff; border-bottom-left-radius:4px; }
         .msg-row.mine .msg-bubble { background:var(--blue); color:#fff; border-bottom-right-radius:4px; }
         .msg-name {
-    font-size: 0.7rem; /* Slightly smaller for tighter look */
+    font-size: 0.7rem;
     color: #888;
-    margin-bottom: 2px; /* Reduced from 4px to 2px */
-    margin-left: 12px;
+    margin-bottom: 1px; /* Tiniest margin */
+    margin-left: 14px; /* Align with text start */
     display: block;
-    line-height: 1; /* Ensures no extra vertical space */
+    line-height: 1; /* Force single line height */
+    position: relative;
+    top: 2px; /* Manually push it down 2 pixels */
 }
+
         .msg-row.mine .msg-name { display:none; }
 
         /* --- PROFILE --- */
@@ -285,22 +288,35 @@
         }
 
         // --- CHAT LOGIC ---
-        function initChat() {
-            const chatBox = document.getElementById('chat-box');
-            db.from('messages').select('*, profiles(avatar_url)').order('created_at', { ascending: false }).limit(50).then(({ data }) => {
-                chatBox.innerHTML = "";
-                if(data) {
-                    data.reverse().forEach(msg => appendMessage(msg));
-                    scrollToBottom();
-                }
-            });
-            db.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-                  const { data: profile } = await db.from('profiles').select('avatar_url').eq('id', payload.new.user_id).single();
-                  const fullMsg = { ...payload.new, profiles: profile };
-                  appendMessage(fullMsg);
-                  scrollToBottom();
-              }).subscribe();
+       function initChat() {
+    const chatBox = document.getElementById('chat-box');
+    
+    // 1. Fetch initial messages
+    db.from('messages').select('*, profiles(avatar_url)').order('created_at', { ascending: false }).limit(50).then(({ data }) => {
+        chatBox.innerHTML = "";
+        if(data) {
+            data.reverse().forEach(msg => appendMessage(msg));
+            
+            // Scroll immediately
+            scrollToBottom();
+            
+            // Scroll again after 100ms (in case images take time to expand layout)
+            setTimeout(scrollToBottom, 100);
+            setTimeout(scrollToBottom, 500); // Double-check for slow mobile connections
         }
+    });
+
+    // 2. Subscribe to new messages
+    db.channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+          const { data: profile } = await db.from('profiles').select('avatar_url').eq('id', payload.new.user_id).single();
+          const fullMsg = { ...payload.new, profiles: profile };
+          appendMessage(fullMsg);
+          scrollToBottom();
+      })
+      .subscribe();
+}
+
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
@@ -323,10 +339,14 @@
             el.innerHTML = html;
             box.appendChild(el);
         }
-        function scrollToBottom() {
-            const box = document.getElementById('chat-box');
-            setTimeout(() => box.scrollTop = box.scrollHeight, 100);
-        }
+       function scrollToBottom() {
+    const box = document.getElementById('chat-box');
+    // Use requestAnimationFrame for smoother/more reliable scrolling on mobile
+    requestAnimationFrame(() => {
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
 
         // --- OC & TOOLS ---
         async function loadOcs() { const {data}=await db.from('characters').select('*').order('id',{ascending:false}); const list=document.getElementById('oc-list'); list.innerHTML=""; (data||[]).forEach(oc=>{ const el=document.createElement('div'); el.className='oc-card'; el.onclick=()=>openViewModal(oc); const bg=oc.image?`background-image: url('${oc.image}')`:`background-color: #222`; el.innerHTML=`<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role||'No Role'}</small></div>`; list.appendChild(el); }); }
