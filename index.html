@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Writer V3.3</title>
+    <title>Writer V3.3 (Fixed)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -17,41 +17,33 @@
         }
 
         .sidebar {
-    width: 250px;
-    border-right: 1px solid var(--border);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    background: #000;
-    
-    /* THE FIX: Make it relative so Z-Index works, and give it a huge number */
-    position: relative; 
-    z-index: 99999;
-}
-
+            width: 250px; border-right: 1px solid var(--border); padding: 20px;
+            display: flex; flex-direction: column; flex-shrink: 0; background: #000;
+            position: relative; z-index: 9999; /* TOP LAYER */
+        }
 
         .logo { font-size: 1.5rem; font-weight: 600; margin-bottom: 40px; color: white; }
 
         .menu-btn {
             background: none; border: none; color: var(--text-dim); text-align: left;
             padding: 15px 10px; font-size: 1rem; cursor: pointer; border-radius: 8px;
+            pointer-events: auto; /* FORCE CLICKABLE */
         }
         .menu-btn:hover { background: #111; color: white; }
         .menu-btn.active { color: white; font-weight: 600; background: #222; }
 
         .main-content {
             flex: 1; padding: 40px; overflow-y: auto; padding-bottom: 100px; position: relative;
+            z-index: 1; /* LOWER LAYER */
         }
 
-        /* --- THE CRITICAL FIX --- */
+        /* --- THE SECTION LOGIC --- */
         .section {
-            display: none !important; /* Force hide by default */
-            max-width: 900px; margin: 0 auto;
+            display: none; /* Hide by default */
         }
         
         .section.active { 
-            display: block !important; /* Force show when active */
+            display: block; /* Show only when active */
         }
 
         /* --- UI ELEMENTS --- */
@@ -86,7 +78,7 @@
         /* MODAL */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .modal-content {
             background: #111; border: 1px solid #333; border-radius: 12px;
@@ -99,18 +91,17 @@
             border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
         }
 
-       @media (max-width: 768px) {
-    .sidebar {
-        position: fixed; /* Keep this fixed on mobile */
-        bottom: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 60px;
-        z-index: 99999; /* Ensure mobile bar is also on top */
-        /* ... rest of your code ... */
-    }
-}
-
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar {
+                position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+                border-right: none; border-top: 1px solid var(--border); flex-direction: row; padding: 0; justify-content: space-around;
+            }
+            .logo { display: none; }
+            .menu-btn { padding: 0; font-size: 0.75rem; flex: 1; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0; }
+            .menu-btn.active { border-top: 2px solid white; background: none; }
+            .main-content { padding: 20px; padding-bottom: 90px; }
+        }
     </style>
 </head>
 <body>
@@ -144,4 +135,71 @@
 
         <div id="oc-creator" class="section">
             <h2>OC Vault</h2>
-            <button class="ac
+            <button class="action-btn" onclick="toggleOCForm()" style="margin-bottom: 20px;">+ New Character</button>
+            
+            <div id="oc-form" style="display: none; background: #111; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
+                <input type="text" id="oc-name" placeholder="Name">
+                <input type="file" id="oc-image" accept="image/*" style="margin-bottom: 10px;">
+                <input type="text" id="oc-role" placeholder="Role">
+                <input type="text" id="oc-age" placeholder="Age">
+                <input type="text" id="oc-gender" placeholder="Gender">
+                <textarea id="oc-desc" rows="2" placeholder="Appearance"></textarea>
+                <textarea id="oc-personality" rows="2" placeholder="Personality"></textarea>
+                <textarea id="oc-goals" rows="2" placeholder="Goals"></textarea>
+                <textarea id="oc-lore" rows="2" placeholder="Backstory"></textarea>
+                <button class="action-btn" onclick="processAndSaveOC()">Save</button>
+            </div>
+            <div id="oc-list" class="oc-grid"></div>
+        </div>
+
+        <div id="prompts" class="section">
+            <h2>Prompts</h2>
+            <select id="prompt-genre">
+                <option value="romance">Romance</option>
+                <option value="horror">Horror</option>
+                <option value="fantasy">Fantasy</option>
+            </select>
+            <button class="action-btn" onclick="generatePrompt()">Generate</button>
+            <div id="prompt-result" class="result-box">...</div>
+        </div>
+
+        <div id="names" class="section">
+            <h2>Names</h2>
+            <select id="name-gender"><option value="feminine">Feminine</option><option value="masculine">Masculine</option></select>
+            <button class="action-btn" onclick="generateNames()">Generate</button>
+            <div id="name-result" class="result-box">...</div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="oc-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModalBtn()">×</button>
+            <div id="modal-img-header" class="modal-header-img"></div>
+            <div class="modal-body">
+                <h2 id="modal-name"></h2>
+                <p id="modal-role" style="color:#888"></p>
+                <p><strong>Age:</strong> <span id="modal-age"></span></p>
+                <p><strong>Desc:</strong> <span id="modal-desc"></span></p>
+                <p><strong>Lore:</strong> <span id="modal-lore"></span></p>
+                <button class="action-btn" onclick="deleteOC()" style="background:#300; color:#f88; margin-top:20px">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(event) event.target.classList.add('active');
+        }
+
+        function toggleOCForm() {
+            const f = document.getElementById('oc-form');
+            f.style.display = f.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // --- OC LOGIC ---
+        function loadOCs() {
+            const list = document.getElementById
