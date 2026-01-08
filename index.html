@@ -265,28 +265,20 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <!-- HOME -->
-        <div id="home" class="section active">
+            <!-- HOME -->
+        <div id="home" class="section active" style="display:flex; flex-direction:column;">
             <h2>Dashboard</h2>
             <div style="background:linear-gradient(145deg,#111,#0a0a0a); padding:30px; border-radius:16px; border:1px solid var(--border);">
                 <p style="font-size:1.2rem; font-weight:300; margin:0 0 10px; color:#eee;">"The scariest moment is always just before you start."</p>
                 <small style="color:var(--dim);">— Stephen King</small>
             </div>
-        </div>
-
-        <!-- CHAT -->
-        <div id="tavern" class="section">
-            <div class="chat-container">
-                <div class="chat-messages" id="chat-box">
-                    <div style="text-align:center; color:#444; margin-top:50px;">Loading...</div>
-                </div>
-                <!-- Input sits naturally in flex flow -->
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMessage()">
-                    <button onclick="sendMessage()">Send</button>
-                </div>
+            
+            <!-- CREDIT LINE -->
+            <div style="margin-top:auto; padding-top:50px; text-align:center; opacity:0.4;">
+                <small style="color:#fff; font-size:0.7rem; font-family:monospace;">made by @camdenbygma</small>
             </div>
         </div>
+
 
         <!-- PROFILE -->
         <div id="profile" class="section">
