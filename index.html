@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V37</title>
+    <title>Writer V38</title>
     <!-- Supabase (Fixed UMD Source) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -79,9 +79,8 @@
             /* MOBILE SOCIAL FIX */
             .social-layout { flex-direction: column; position: relative; }
             .friends-list { width: 100%; height: 100%; border-right: none; position: absolute; z-index: 10; background: #000; }
-            /* Only hide on mobile when class is present */
             .friends-list.hidden-mobile { display: none; } 
-            .private-chat-area { flex: 1; display: none; } /* Hidden by default on mobile */
+            .private-chat-area { flex: 1; display: none; }
             .private-chat-area.active { display: flex; height: 100%; }
             #chat-back-btn { display: block; }
         }
@@ -118,6 +117,12 @@
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #111; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; }
         .stat-box small { color: #666; font-size: 0.7rem; text-transform: uppercase; }
         .stat-box span { display: block; font-weight: 600; font-size: 0.95rem; }
+        
+        /* DROPDOWN MENU */
+        .dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 500; min-width: 150px; overflow: hidden; margin-top: 5px; }
+        .dropdown-item { padding: 10px 15px; cursor: pointer; font-size: 0.9rem; color: #ddd; display: block; width: 100%; text-align: left; background: none; border: none; }
+        .dropdown-item:hover { background: #2a2a2a; color: #fff; }
+        .relative-container { position: relative; }
     </style>
 </head>
 <body>
@@ -247,15 +252,27 @@
             <div id="notes-list" class="oc-grid"></div>
         </div>
 
+        <!-- GALLERY SECTION UPGRADED -->
         <div id="gallery" class="section">
             <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h2 style="margin:0;">Face Claim Gallery</h2>
-                    <button class="btn" onclick="openGalleryModal()" style="width:auto; padding:10px 20px;">+ Upload</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn" onclick="openGalleryModal()" style="width:auto; padding:10px 20px;">+ Upload</button>
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="gallery-search-input" placeholder="Search by name..." style="margin:0; flex:1;" onkeyup="loadGallery()">
-                    <button id="btn-filter-mine" class="btn-sec" onclick="toggleGalleryFilter()" style="margin:0; width:auto; white-space:nowrap;">My Uploads</button>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="gallery-search-input" placeholder="Search by name or tags..." style="margin:0; flex:1;" onkeyup="loadGallery()">
+                    
+                    <div class="relative-container">
+                        <button class="btn-sec" onclick="toggleFilterMenu()" style="margin:0; width:auto; white-space:nowrap;">Filters ▾</button>
+                        <div id="filter-dropdown" class="dropdown-menu">
+                            <button class="dropdown-item" onclick="applyGalleryFilter('all')">All</button>
+                            <button class="dropdown-item" onclick="applyGalleryFilter('male')">Male</button>
+                            <button class="dropdown-item" onclick="applyGalleryFilter('female')">Female</button>
+                            <button class="dropdown-item" onclick="applyGalleryFilter('mine')">My Uploads</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="gallery-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:15px;"></div>
@@ -282,18 +299,32 @@
     
     <div id="note-modal"><div class="form-container" style="max-width:500px;"><h2 id="note-title-header" style="margin-bottom:20px;">Edit Note</h2><input type="hidden" id="note-id"><input type="text" id="note-title" placeholder="Title"><textarea id="note-content" rows="10" placeholder="Write something..." style="font-family:monospace; line-height:1.5;"></textarea><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn" onclick="saveNote()">Save</button><button class="btn-sec" onclick="deleteNote()" id="btn-delete-note" style="color:#ff5555; border-color:#ff555533;">Delete</button><button class="btn-sec" onclick="document.getElementById('note-modal').style.display='none'">Cancel</button></div></div></div>
 
+    <!-- UPDATED GALLERY MODAL (With Gender) -->
     <div id="gallery-modal"><div class="form-container" style="max-width:400px;">
-        <h2 style="margin-bottom:20px;">Upload Face Claim</h2>
+        <h2 id="gallery-modal-title" style="margin-bottom:20px;">Upload Face Claim</h2>
+        <input type="hidden" id="gallery-edit-id">
+        
         <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Face Claim Name (Required)</label>
         <input type="text" id="gallery-name" placeholder="e.g. Ana de Armas">
+        
+        <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Gender (Required)</label>
+        <select id="gallery-gender" style="margin-bottom:15px;">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="other">Other/Non-Binary</option>
+        </select>
+
         <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Select Image</label>
         <input type="file" id="gallery-file" accept="image/*">
+        
         <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Or Paste URL</label>
         <input type="text" id="gallery-url" placeholder="https://...">
+        
         <label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Tags (comma separated)</label>
-        <input type="text" id="gallery-tags" placeholder="e.g. goth, male, cyberpunk">
+        <input type="text" id="gallery-tags" placeholder="e.g. goth, tattoos, cyberpunk">
+        
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn" onclick="uploadFaceClaim()">Upload</button>
+            <button class="btn" onclick="uploadFaceClaim()">Save</button>
             <button class="btn-sec" onclick="document.getElementById('gallery-modal').style.display='none'">Cancel</button>
         </div>
     </div></div>
@@ -322,7 +353,8 @@
             document.getElementById('auth-msg').innerText = "System Error: " + err.message;
         }
 
-        let user = null; let currentOc = null; let isSignupMode = false; let promptCache = {}; let nameCache = {}; let myUsername = "Writer"; let galleryFilterMine = false; 
+        let user = null; let currentOc = null; let isSignupMode = false; let promptCache = {}; let nameCache = {}; let myUsername = "Writer"; 
+        let currentGalleryFilter = 'all'; // 'all', 'mine', 'male', 'female'
         let activeChatFriendId = null;
 
         // --- STARTUP ---
@@ -370,7 +402,7 @@
                 const isMeA = rel.user_a === user.id;
                 const friendId = isMeA ? rel.user_b : rel.user_a;
                 
-                // SAFE SELECT: Use select('*') to get everything without crashing if 'email' is missing
+                // SAFE SELECT
                 const { data: friendProfile, error } = await db.from('profiles').select('*').eq('id', friendId).single();
                 
                 if (error || !friendProfile) continue; // Skip if profile loading failed
@@ -392,10 +424,7 @@
                     div.className = 'friend-item';
                     div.onclick = () => openPrivateChat(friendId, friendProfile);
                     const av = friendProfile.avatar_url ? `background-image:url('${friendProfile.avatar_url}')` : 'background:#333';
-                    
-                    // Show email only if it exists in the fetched data
                     const emailDisplay = friendProfile.email ? `<small style="color:#666; font-size:0.7rem; display:block;">${friendProfile.email}</small>` : '';
-                    
                     div.innerHTML = `<div style="width:32px; height:32px; border-radius:50%; ${av}; background-size:cover;"></div><div><span>${friendProfile.username}</span>${emailDisplay}</div>`;
                 }
                 list.appendChild(div);
@@ -410,9 +439,8 @@
         async function openPrivateChat(friendId, friendProfile) {
             activeChatFriendId = friendId;
 
-            // Mobile logic: Hide friends list, show chat
             if (window.innerWidth <= 768) {
-                document.getElementById('friends-panel').classList.add('hidden-mobile'); // Only hides on mobile now
+                document.getElementById('friends-panel').classList.add('hidden-mobile');
                 document.getElementById('chat-panel').classList.add('active');
             }
 
@@ -426,7 +454,6 @@
 
             loadPrivateMessages();
             
-            // Subscribe to new messages
             db.channel('private:' + friendId).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, payload => {
                 if ((payload.new.sender_id === user.id && payload.new.receiver_id === friendId) || (payload.new.sender_id === friendId && payload.new.receiver_id === user.id)) {
                     appendPrivateMessage(payload.new);
@@ -443,9 +470,7 @@
         async function loadPrivateMessages() {
             const box = document.getElementById('private-chat-box');
             box.innerHTML = '<div style="color:#444; text-align:center;">Loading...</div>';
-            
             const { data } = await db.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${activeChatFriendId}),and(sender_id.eq.${activeChatFriendId},receiver_id.eq.${user.id})`).order('created_at', { ascending: true });
-            
             box.innerHTML = "";
             if (data) data.forEach(msg => appendPrivateMessage(msg));
             scrollToPrivateBottom();
@@ -483,41 +508,140 @@
         // --- NAVIGATION ---
         function nav(id) { document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); }); document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active')); const target = document.getElementById(id); if(target) { target.style.display = (id === 'tavern' || id === 'social' && window.innerWidth > 768) ? 'flex' : 'block'; if((id === 'tavern' || id === 'social') && window.innerWidth <= 768) target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if(id === 'tavern') setTimeout(scrollToBottom, 100); if(id === 'gallery') loadGallery(); if(id === 'social') loadFriends(); }
 
-        // --- GALLERY ---
-        function toggleGalleryFilter() { galleryFilterMine = !galleryFilterMine; const btn = document.getElementById('btn-filter-mine'); if(galleryFilterMine) btn.classList.add('active'); else btn.classList.remove('active'); loadGallery(); }
+        // --- GALLERY UPGRADED ---
+        function toggleFilterMenu() {
+            const menu = document.getElementById('filter-dropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function applyGalleryFilter(filter) {
+            currentGalleryFilter = filter;
+            document.getElementById('filter-dropdown').style.display = 'none';
+            loadGallery();
+        }
+
         async function loadGallery() {
-            const grid = document.getElementById('gallery-grid'); const search = document.getElementById('gallery-search-input').value.trim();
+            const grid = document.getElementById('gallery-grid'); 
+            const search = document.getElementById('gallery-search-input').value.trim();
             grid.innerHTML = '<div style="color:#666; grid-column:1/-1;">Loading visuals...</div>';
+            
             try {
                 let query = db.from('face_claims').select('*').order('id', {ascending: false});
-                if (search) { query = query.ilike('name', `%${search}%`); }
-                if (galleryFilterMine) { query = query.eq('uploaded_by', user.id); } else { query = query.limit(50); }
-                const { data } = await query;
-                if(data && data.length > 0) {
-                    grid.innerHTML = "";
-                    data.forEach(img => {
-                        const isMine = img.uploaded_by === user.id;
-                        const el = document.createElement('div');
-                        el.style.border = '1px solid var(--border)'; el.style.borderRadius = '12px'; el.style.overflow = 'hidden'; el.style.background = 'var(--card)';
-                        el.innerHTML = `<div style="background:url('${img.url}') center/cover; height:180px; position:relative; cursor:pointer;" onclick="viewImage('${img.url}')">${isMine ? `<button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}</div><div style="padding:12px;"><h4 style="margin:0 0 4px 0; font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name || 'Unnamed'}</h4><small style="color:#666; font-size:0.75rem;">${img.tags ? img.tags.join(', ') : ''}</small></div>`;
-                        grid.appendChild(el);
-                    });
-                } else { grid.innerHTML = '<div style="color:#666; grid-column:1/-1;">No images found.</div>'; }
+                
+                // Advanced Search (Name or Tags)
+                if (search) {
+                     // Note: We use an "or" filter for name and tags
+                     query = query.or(`name.ilike.%${search}%,tags.cs.{${search}}`);
+                }
+
+                // Filter Logic
+                if (currentGalleryFilter === 'mine') { 
+                    query = query.eq('uploaded_by', user.id); 
+                } else if (currentGalleryFilter === 'male') {
+                    query = query.eq('gender', 'male');
+                } else if (currentGalleryFilter === 'female') {
+                    query = query.eq('gender', 'female');
+                } else {
+                    query = query.limit(50); 
+                }
+                
+                const { data, error } = await query;
+                
+                if (error) {
+                    // Fallback for tags search failure (if array column issue)
+                    console.warn("Advanced search error, trying basic name search", error);
+                    let basicQuery = db.from('face_claims').select('*').order('id', {ascending: false});
+                    if(search) basicQuery = basicQuery.ilike('name', `%${search}%`);
+                    const { data: basicData } = await basicQuery;
+                    renderGalleryGrid(basicData, grid);
+                    return;
+                }
+
+                renderGalleryGrid(data, grid);
+
             } catch(e) { console.log("Gallery error", e); }
         }
-        function openGalleryModal() { document.getElementById('gallery-modal').style.display = 'flex'; document.getElementById('gallery-name').value = ""; document.getElementById('gallery-file').value = ""; document.getElementById('gallery-url').value = ""; document.getElementById('gallery-tags').value = ""; }
+
+        function renderGalleryGrid(data, grid) {
+            if(data && data.length > 0) {
+                grid.innerHTML = "";
+                data.forEach(img => {
+                    const isMine = img.uploaded_by === user.id;
+                    const el = document.createElement('div');
+                    el.style.border = '1px solid var(--border)'; el.style.borderRadius = '12px'; el.style.overflow = 'hidden'; el.style.background = 'var(--card)';
+                    
+                    // Edit Button Logic (Only for owner)
+                    const editBtn = isMine ? 
+                        `<div style="position:absolute; top:8px; right:8px; display:flex; gap:5px;">
+                            <button onclick="event.stopPropagation(); openEditGalleryModal(${img.id}, '${img.name.replace(/'/g, "\\'")}', '${img.url}', '${img.gender || 'other'}', '${(img.tags || []).join(', ')}')" style="width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">✎</button>
+                            <button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>
+                         </div>` : '';
+
+                    el.innerHTML = `<div style="background:url('${img.url}') center/cover; height:180px; position:relative; cursor:pointer;" onclick="viewImage('${img.url}')">${editBtn}</div><div style="padding:12px;"><h4 style="margin:0 0 4px 0; font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name || 'Unnamed'}</h4><small style="color:#666; font-size:0.75rem;">${img.tags ? img.tags.join(', ') : ''}</small></div>`;
+                    grid.appendChild(el);
+                });
+            } else { grid.innerHTML = '<div style="color:#666; grid-column:1/-1;">No images found.</div>'; }
+        }
+
+        function openGalleryModal() { 
+            document.getElementById('gallery-modal').style.display = 'flex'; 
+            document.getElementById('gallery-modal-title').innerText = "Upload Face Claim";
+            document.getElementById('gallery-edit-id').value = ""; 
+            document.getElementById('gallery-name').value = ""; 
+            document.getElementById('gallery-file').value = ""; 
+            document.getElementById('gallery-url').value = ""; 
+            document.getElementById('gallery-tags').value = ""; 
+            document.getElementById('gallery-gender').value = "female";
+        }
+
+        function openEditGalleryModal(id, name, url, gender, tags) {
+            document.getElementById('gallery-modal').style.display = 'flex'; 
+            document.getElementById('gallery-modal-title').innerText = "Edit Face Claim";
+            document.getElementById('gallery-edit-id').value = id; 
+            document.getElementById('gallery-name').value = name; 
+            document.getElementById('gallery-url').value = url; 
+            document.getElementById('gallery-tags').value = tags; 
+            document.getElementById('gallery-gender').value = gender;
+        }
+
         function viewImage(url) { document.getElementById('full-image-src').src = url; document.getElementById('image-viewer-modal').style.display = 'flex'; }
 
         async function uploadFaceClaim() {
-            const name = document.getElementById('gallery-name').value.trim(); const file = document.getElementById('gallery-file').files[0]; const urlInput = document.getElementById('gallery-url').value; const tagsInput = document.getElementById('gallery-tags').value;
+            const id = document.getElementById('gallery-edit-id').value;
+            const name = document.getElementById('gallery-name').value.trim(); 
+            const gender = document.getElementById('gallery-gender').value;
+            const file = document.getElementById('gallery-file').files[0]; 
+            const urlInput = document.getElementById('gallery-url').value; 
+            const tagsInput = document.getElementById('gallery-tags').value;
+
             if(!name) return alert("Please enter the Face Claim Name.");
+            
             let finalUrl = urlInput;
             if (file) { finalUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); }); }
-            if (!finalUrl) return alert("Please select a file or paste a URL.");
+            
+            if (!finalUrl && !id) return alert("Please select a file or paste a URL.");
+            
             const tagArray = tagsInput.split(',').map(t => t.trim()).filter(t => t);
-            const { error } = await db.from('face_claims').insert([{ name: name, url: finalUrl, tags: tagArray, uploaded_by: user.id }]);
-            if (error) { alert("Error: " + error.message); } else { document.getElementById('gallery-modal').style.display = 'none'; loadGallery(); }
+            
+            const payload = { name: name, gender: gender, tags: tagArray };
+            if (finalUrl) payload.url = finalUrl; // Only update URL if new one provided
+            if (!id) payload.uploaded_by = user.id; // Only set uploader on insert
+
+            let error;
+            if (id) {
+                // UPDATE
+                const res = await db.from('face_claims').update(payload).eq('id', id);
+                error = res.error;
+            } else {
+                // INSERT
+                const res = await db.from('face_claims').insert([payload]);
+                error = res.error;
+            }
+
+            if (error) { alert("Error: " + error.message); } 
+            else { document.getElementById('gallery-modal').style.display = 'none'; loadGallery(); }
         }
+
         async function deleteFaceClaim(id) { if(!confirm("Delete this face claim?")) return; const { error } = await db.from('face_claims').delete().eq('id', id); if(error) alert(error.message); else loadGallery(); }
 
         // --- PROFILE, OCS, NOTES, EXTRAS ---
