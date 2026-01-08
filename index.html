@@ -263,6 +263,21 @@
             <p id="onboard-msg" style="color:#ff5555; margin-top:15px; text-align:center; font-size:0.9rem; min-height:20px;"></p>
         </div>
     </div>
+<!-- NOTE MODAL -->
+<div id="note-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; padding:20px; justify-content:center; align-items:center;">
+    <div class="form-container" style="max-width:500px;">
+        <h2 id="note-title-header" style="margin-bottom:20px;">Edit Note</h2>
+        <input type="hidden" id="note-id">
+        <input type="text" id="note-title" placeholder="Title">
+        <textarea id="note-content" rows="10" placeholder="Write something..." style="font-family:monospace; line-height:1.5;"></textarea>
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn" onclick="saveNote()">Save</button>
+            <button class="btn-sec" onclick="deleteNote()" id="btn-delete-note" style="color:#ff5555; border-color:#ff555533;">Delete</button>
+            <button class="btn-sec" onclick="document.getElementById('note-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+</div>
 
     <!-- NAVIGATION -->
     <div class="sidebar">
@@ -270,6 +285,7 @@
         <div class="nav-items">
             <button class="menu-btn active" id="btn-home" onclick="nav('home')">Home</button>
             <button class="menu-btn" id="btn-ocs" onclick="nav('ocs')">Characters</button>
+            <button class="menu-btn" id="btn-notes" onclick="nav('notes')">Notepad</button>
             <button class="menu-btn" id="btn-tavern" onclick="nav('tavern')">Chat</button>
             <button class="menu-btn" id="btn-dictionary" onclick="nav('dictionary')">Dictionary</button>
             <button class="menu-btn" id="btn-prompts" onclick="nav('prompts')">Prompts</button>
@@ -335,6 +351,14 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>Character Vault</h2><button class="btn" onclick="openOcForm()" style="width:auto; padding:10px 20px;">+ New</button></div>
             <div id="oc-list" class="oc-grid"></div>
         </div>
+<!-- NOTEPAD -->
+<div id="notes" class="section">
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+        <h2>Notepad</h2>
+        <button class="btn" onclick="openNoteModal()" style="width:auto; padding:10px 20px;">+ New Note</button>
+    </div>
+    <div id="notes-list" class="oc-grid"></div>
+</div>
 
         <!-- DICTIONARY -->
         <div id="dictionary" class="section">
