@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V34</title>
+    <title>Writer V35</title>
     <!-- Supabase (Fixed UMD Source) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -58,7 +58,8 @@
         .request-item { padding: 15px; background: rgba(0,149,246,0.1); border-bottom: 1px solid var(--border); }
         .private-chat-area { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
         #private-chat-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #444; flex-direction: column; }
-        
+        #chat-back-btn { display: none; margin-right: 10px; padding: 5px 10px; background: #222; border: 1px solid #444; border-radius: 8px; color: #fff; cursor: pointer; }
+
         /* --- MOBILE --- */
         @media(max-width: 768px) {
             body { flex-direction: column; }
@@ -74,9 +75,14 @@
             #tavern.section.active, #social.section.active { height: 100%; padding-bottom: 0; }
             .chat-container { height: 100%; }
             .chat-input-area { position: static; padding: 10px 14px; }
-            .social-layout { flex-direction: column; }
-            .friends-list { width: 100%; height: auto; max-height: 35%; border-right: none; border-bottom: 1px solid var(--border); }
-            .private-chat-area { flex: 1; }
+            
+            /* MOBILE SOCIAL FIX */
+            .social-layout { flex-direction: column; position: relative; }
+            .friends-list { width: 100%; height: 100%; border-right: none; position: absolute; z-index: 10; background: #000; }
+            .friends-list.hidden { display: none; }
+            .private-chat-area { flex: 1; display: none; } /* Hidden by default */
+            .private-chat-area.active { display: flex; height: 100%; }
+            #chat-back-btn { display: block; }
         }
 
         /* --- UI COMPONENTS --- */
@@ -175,10 +181,10 @@
             </div>
         </div>
 
-        <!-- SOCIAL SECTION (FIXED BUTTON) -->
+        <!-- SOCIAL SECTION (MOBILE OPTIMIZED) -->
         <div id="social" class="section">
             <div class="social-layout">
-                <div class="friends-list">
+                <div class="friends-list" id="friends-panel">
                     <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:center;">
                         <button class="btn" style="padding:8px 20px; font-size:0.85rem; width:auto;" onclick="document.getElementById('add-friend-modal').style.display='flex'">+ Add Friend</button>
                     </div>
@@ -186,13 +192,14 @@
                         <div style="padding:20px; color:#666; font-size:0.85rem; text-align:center;">Loading...</div>
                     </div>
                 </div>
-                <div class="private-chat-area">
+                <div class="private-chat-area" id="chat-panel">
                     <div id="private-chat-placeholder">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" style="margin-bottom:10px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        Select a friend to message.
+                        <span style="display:none; @media(min-width:769px){display:inline;}">Select a friend to message.</span>
                     </div>
                     <div id="active-chat-interface" style="display:none; flex-direction:column; height:100%;">
                         <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:600; display:flex; align-items:center;">
+                            <button id="chat-back-btn" onclick="closePrivateChatMobile()">←</button>
                             <div id="chat-header-avatar" style="width:30px; height:30px; border-radius:50%; background:#333; margin-right:10px;"></div>
                             <span id="chat-header-name">Friend</span>
                         </div>
@@ -361,7 +368,8 @@
             for (const rel of relations) {
                 const isMeA = rel.user_a === user.id;
                 const friendId = isMeA ? rel.user_b : rel.user_a;
-                const { data: friendProfile } = await db.from('profiles').select('username, avatar_url').eq('id', friendId).single();
+                // Note: Assuming 'email' is available in profiles via previous SQL update. If not, it will be undefined.
+                const { data: friendProfile } = await db.from('profiles').select('username, avatar_url, email').eq('id', friendId).single();
                 
                 const div = document.createElement('div');
                 
@@ -380,7 +388,8 @@
                     div.className = 'friend-item';
                     div.onclick = () => openPrivateChat(friendId, friendProfile);
                     const av = friendProfile.avatar_url ? `background-image:url('${friendProfile.avatar_url}')` : 'background:#333';
-                    div.innerHTML = `<div style="width:32px; height:32px; border-radius:50%; ${av}; background-size:cover;"></div><span>${friendProfile.username}</span>`;
+                    const emailDisplay = friendProfile.email ? `<small style="color:#666; font-size:0.7rem; display:block;">${friendProfile.email}</small>` : '';
+                    div.innerHTML = `<div style="width:32px; height:32px; border-radius:50%; ${av}; background-size:cover;"></div><div><span>${friendProfile.username}</span>${emailDisplay}</div>`;
                 }
                 list.appendChild(div);
             }
@@ -393,6 +402,13 @@
 
         async function openPrivateChat(friendId, friendProfile) {
             activeChatFriendId = friendId;
+
+            // Mobile logic: Hide friends list, show chat
+            if (window.innerWidth <= 768) {
+                document.getElementById('friends-panel').classList.add('hidden');
+                document.getElementById('chat-panel').classList.add('active');
+            }
+
             document.getElementById('private-chat-placeholder').style.display = 'none';
             document.getElementById('active-chat-interface').style.display = 'flex';
             document.getElementById('chat-header-name').innerText = friendProfile.username;
@@ -409,6 +425,12 @@
                     appendPrivateMessage(payload.new);
                 }
             }).subscribe();
+        }
+        
+        function closePrivateChatMobile() {
+            activeChatFriendId = null;
+            document.getElementById('friends-panel').classList.remove('hidden');
+            document.getElementById('chat-panel').classList.remove('active');
         }
 
         async function loadPrivateMessages() {
