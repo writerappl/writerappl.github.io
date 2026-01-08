@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V32</title>
+    <title>Writer V33</title>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,7 +75,7 @@
             .chat-container { height: 100%; }
             .chat-input-area { position: static; padding: 10px 14px; }
             .social-layout { flex-direction: column; }
-            .friends-list { width: 100%; height: auto; max-height: 40%; border-right: none; border-bottom: 1px solid var(--border); }
+            .friends-list { width: 100%; height: auto; max-height: 35%; border-right: none; border-bottom: 1px solid var(--border); }
             .private-chat-area { flex: 1; }
         }
 
@@ -144,7 +144,7 @@
         <div class="logo">writer.</div>
         <div class="nav-items">
             <button class="menu-btn active" id="btn-home" onclick="nav('home')">Home</button>
-            <button class="menu-btn" id="btn-social" onclick="nav('social')">Social 💬</button> <!-- NEW -->
+            <button class="menu-btn" id="btn-social" onclick="nav('social')">Social 💬</button>
             <button class="menu-btn" id="btn-ocs" onclick="nav('ocs')">Characters</button>
             <button class="menu-btn" id="btn-notes" onclick="nav('notes')">Notepad</button>
             <button class="menu-btn" id="btn-gallery" onclick="nav('gallery')">Face Claims</button>
@@ -175,12 +175,12 @@
             </div>
         </div>
 
-        <!-- NEW SOCIAL SECTION -->
+        <!-- SOCIAL SECTION (FIXED BUTTON) -->
         <div id="social" class="section">
             <div class="social-layout">
                 <div class="friends-list">
-                    <div style="padding:15px; border-bottom:1px solid var(--border);">
-                        <button class="btn" style="padding:8px; font-size:0.85rem;" onclick="document.getElementById('add-friend-modal').style.display='flex'">+ Add Friend</button>
+                    <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:center;">
+                        <button class="btn" style="padding:8px 20px; font-size:0.85rem; width:auto;" onclick="document.getElementById('add-friend-modal').style.display='flex'">+ Add Friend</button>
                     </div>
                     <div id="friends-container">
                         <div style="padding:20px; color:#666; font-size:0.85rem; text-align:center;">Loading...</div>
@@ -501,18 +501,4 @@
         async function saveOc() { const id = document.getElementById('form-id').value; const name = document.getElementById('form-name').value; if(!name) return alert("Name is required"); const file = document.getElementById('form-image').files[0]; let imageBase64 = null; if(file) { imageBase64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); }); } const ocData = { user_id: user.id, name: name, role: document.getElementById('form-role').value, age: document.getElementById('form-age').value, gender: document.getElementById('form-gender').value, "desc": document.getElementById('form-desc').value, personality: document.getElementById('form-personality').value, goals: document.getElementById('form-goals').value, lore: document.getElementById('form-lore').value, theme_song: document.getElementById('form-song').value }; if(imageBase64) ocData.image = imageBase64; if(id) await db.from('characters').update(ocData).eq('id', id); else await db.from('characters').insert([ocData]); document.getElementById('oc-form-modal').style.display = 'none'; loadOcs(); }
         async function deleteOc() { if(!confirm("Delete this character?")) return; await db.from('characters').delete().eq('id', currentOc.id); document.getElementById('oc-view-modal').style.display = 'none'; loadOcs(); }
         async function loadNotes() { const list = document.getElementById('notes-list'); try { const { data, error } = await db.from('notes').select('*').order('created_at', { ascending: false }); if (error) throw error; list.innerHTML = ""; if(!data || data.length === 0) { list.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No notes yet.</div>'; return; } data.forEach(note => { const el = document.createElement('div'); el.className = 'oc-card'; el.style.height = '200px'; el.onclick = () => openNoteModal(note); const preview = note.content ? note.content.substring(0, 100) + "..." : "Empty note"; el.innerHTML = `<div class="oc-card-info" style="border:none; justify-content:flex-start;"><h3 style="margin-bottom:10px;">${note.title || 'Untitled'}</h3><p style="color:#888; font-size:0.85rem; overflow:hidden;">${preview}</p><small style="margin-top:auto; color:#444;">${new Date(note.created_at).toLocaleDateString()}</small></div>`; list.appendChild(el); }); } catch (err) { console.log("Notes not loaded", err); } }
-        function openNoteModal(note = null) { const modal = document.getElementById('note-modal'); const delBtn = document.getElementById('btn-delete-note'); modal.style.display = 'flex'; if (note) { document.getElementById('note-title-header').innerText = "Edit Note"; document.getElementById('note-id').value = note.id; document.getElementById('note-title').value = note.title; document.getElementById('note-content').value = note.content; delBtn.style.display = 'block'; } else { document.getElementById('note-title-header').innerText = "New Note"; document.getElementById('note-id').value = ""; document.getElementById('note-title').value = ""; document.getElementById('note-content').value = ""; delBtn.style.display = 'none'; } }
-        async function saveNote() { const id = document.getElementById('note-id').value; const title = document.getElementById('note-title').value; const content = document.getElementById('note-content').value; if (!title && !content) return alert("Write something first!"); const noteData = { user_id: user.id, title: title, content: content }; if (id) { await db.from('notes').update(noteData).eq('id', id); } else { await db.from('notes').insert([noteData]); } document.getElementById('note-modal').style.display = 'none'; loadNotes(); }
-        async function deleteNote() { const id = document.getElementById('note-id').value; if (!id || !confirm("Delete this note?")) return; await db.from('notes').delete().eq('id', id); document.getElementById('note-modal').style.display = 'none'; loadNotes(); }
-        function initChat() { const chatBox = document.getElementById('chat-box'); db.from('messages').select('*, profiles(avatar_url)').order('created_at', { ascending: false }).limit(50).then(({ data }) => { chatBox.innerHTML = ""; if(data) { data.reverse().forEach(msg => appendMessage(msg)); scrollToBottom(); setTimeout(scrollToBottom, 500); } }); db.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => { const { data: profile } = await db.from('profiles').select('avatar_url').eq('id', payload.new.user_id).single(); const fullMsg = { ...payload.new, profiles: profile }; appendMessage(fullMsg); scrollToBottom(); }).subscribe(); }
-        async function sendMessage() { const input = document.getElementById('chat-input'); const text = input.value.trim(); if(!text) return; input.value = ""; await db.from('messages').insert([{ user_id: user.id, username: myUsername, content: text }]); }
-        function appendMessage(msg) { const box = document.getElementById('chat-box'); const el = document.createElement('div'); const isMe = msg.user_id === user.id; const avatar = (msg.profiles && msg.profiles.avatar_url) ? msg.profiles.avatar_url : null; el.className = `msg-row ${isMe ? 'mine' : 'theirs'}`; let html = ''; if(!isMe) { html += `<div class="msg-avatar" style="${avatar ? `background-image:url('${avatar}')` : 'background:#333'}"></div><div class="msg-wrapper"><span class="msg-name">${msg.username}</span><div class="msg-bubble">${msg.content}</div></div>`; } else { html += `<div class="msg-bubble">${msg.content}</div>`; } el.innerHTML = html; box.appendChild(el); }
-        function scrollToBottom() { const box = document.getElementById('chat-box'); requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; }); }
-        async function searchWord() { const w=document.getElementById('dict-search').value.toLowerCase(); const resBox=document.getElementById('dict-result'); resBox.innerHTML='<div style="color:#888">Searching...</div>'; try{const dr=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);if(dr.ok){const d=await dr.json();let s="";if(d[0].meanings[0].synonyms.length>0)s=`<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;resBox.innerHTML=`<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${s}`;return;}}catch(e){} try{const wr=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);if(!wr.ok)throw new Error("Wiki not found");const wd=await wr.json();if(wd.type==='standard'||wd.type==='disambiguation'){const img=wd.thumbnail?`<img src="${wd.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">`:'';resBox.innerHTML=`${img}<h3 style="margin:0">${wd.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${wd.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;}else{resBox.innerHTML="No distinct result found.";}}catch(e){resBox.innerHTML=`<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;} }
-        async function generatePrompt() { const g=document.getElementById('prompt-genre').value; if(!promptCache[g]){document.getElementById('prompt-result').innerText="Loading...";const{data}=await db.from('prompts').select('content').eq('genre',g);if(data&&data.length>0)promptCache[g]=data.map(i=>i.content);else promptCache[g]=["No prompts."];}const l=promptCache[g];document.getElementById('prompt-result').innerText=l[Math.floor(Math.random()*l.length)]; }
-        async function generateNames() { const c=parseInt(document.getElementById('name-count').value); const g=document.getElementById('name-gender').value; const r=document.getElementById('name-result'); if(!nameCache[g]){r.innerText="Loading...";const{data}=await db.from('names').select('name').eq('gender',g);if(data&&data.length>0)nameCache[g]=data.map(i=>i.name);else nameCache[g]=["No names."];}const l=nameCache[g];const s=l.sort(()=>0.5-Math.random());r.innerText=s.slice(0,c).join(", "); }
-        
-        window.onload = checkSession;
-    </script>
-</body>
-</html>
+        function openNoteModal(note = null) { const modal = document.getElementById('note-modal'); const delBtn = document.getElementById('btn-delete-note'); modal.style.display = 'flex'; if (note) { document.getElementById('note-title-header').innerText = "Edit Note"; document.getElementById('note-id').value = note.id; document.getElementById('note-title').value = note.title; document.getElementById('note-content').value = note.content; delBtn.style.display = 'block'; } else { document.getElementById('note-title-header').innerText = "New Note"; document.getElementById('note-id').value = ""; document.getElementById('note-title').value = ""; document.getElementById('note-content').value =
