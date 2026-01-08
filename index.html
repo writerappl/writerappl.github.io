@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V28</title>
+    <title>Writer V30</title>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SoundCloud API (REQUIRED for this to work) -->
+    <!-- SoundCloud API -->
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -23,7 +23,8 @@
         .menu-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .menu-btn.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
         .profile-btn-container { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
-        .profile-btn { background: transparent; border: none; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; }
+        .profile-btn { background: #1a1a1a; border: 1px solid #333; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .profile-btn:hover { border-color: var(--blue); }
 
         /* --- MAIN CONTENT --- */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -48,8 +49,8 @@
         .msg-row.mine .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
         .msg-row.mine .msg-name { display: none; }
 
-        /* --- AMBIENCE WIDGET --- */
-        #ambience-widget { position: fixed; bottom: 20px; right: 20px; z-index: 5000; display: flex; flex-direction: column; align-items: flex-end; }
+        /* --- AMBIENCE WIDGET (FIXED POSITION) --- */
+        #ambience-widget { position: fixed; bottom: 30px; right: 30px; z-index: 5000; display: flex; flex-direction: column; align-items: flex-end; }
         #ambience-controls { background: #111; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(10px); pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         #ambience-controls.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
         .ambience-btn { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: #ccc; border-radius: 8px; cursor: pointer; margin-bottom: 8px; text-align: left; font-size: 0.85rem; font-weight: 500; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
@@ -57,8 +58,6 @@
         .ambience-btn.stop { background: rgba(255,85,85,0.1); border-color: rgba(255,85,85,0.2); color: #ff5555; margin-bottom: 0; justify-content: center; }
         .fab { width: 50px; height: 50px; border-radius: 50%; background: var(--blue); border: none; color: #fff; cursor: pointer; font-size: 1.4rem; box-shadow: 0 4px 15px rgba(0,149,246,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
         .fab:active { transform: scale(0.95); }
-        
-        /* HIDDEN SOUNDCLOUD PLAYERS */
         .sc-hidden { position: absolute; top: -1000px; left: -1000px; visibility: hidden; width: 1px; height: 1px; }
 
         /* --- MOBILE --- */
@@ -78,7 +77,9 @@
             .chat-container { height: 100%; }
             .chat-input-area { position: static; padding: 10px 14px; }
             .profile-header { flex-direction: column; text-align: center; gap: 15px; }
-            #ambience-widget { bottom: 80px !important; right: 15px !important; }
+            
+            /* FIXED: Moved button up on mobile so it doesn't overlap chat */
+            #ambience-widget { bottom: 90px !important; right: 15px !important; }
         }
 
         /* --- UI COMPONENTS --- */
@@ -102,7 +103,7 @@
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
         .auth-toggle { color: #888; margin-top: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
         #onboarding-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
-        #oc-form-modal, #oc-view-modal, #note-modal, #gallery-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+        #oc-form-modal, #oc-view-modal, #note-modal, #gallery-modal, #image-viewer-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         .form-container { width: 100%; max-width: 700px; background: #000; padding: 30px; border-radius: 20px; border: 1px solid #333; margin: auto; }
         .view-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -221,7 +222,7 @@
         <div id="names" class="section"><h2>Names</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select><select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select><button class="btn" onclick="generateNames()" style="flex:2;">Generate</button></div><div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div></div>
     </div> 
 
-    <!-- AMBIENCE WIDGET (SOUNDCLOUD EDITION) -->
+    <!-- AMBIENCE WIDGET (FIXED TRACKS) -->
     <div id="ambience-widget">
         <div id="ambience-controls">
             <h4 style="margin:0 0 10px 0; color:#888; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Soundscapes</h4>
@@ -232,10 +233,10 @@
         </div>
         <button class="fab" onclick="toggleAmbience()">🎵</button>
         
-        <!-- HIDDEN SOUNDCLOUD PLAYERS -->
-        <iframe id="sc-lofi" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/337351059&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe>
-        <iframe id="sc-rain" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/256860361&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe>
-        <iframe id="sc-dark" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/276527581&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"></iframe>
+        <!-- SOUNDCLOUD PLAYERS (VERIFIED IDs) -->
+        <iframe id="sc-lofi" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1149957388&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
+        <iframe id="sc-rain" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/207982269&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
+        <iframe id="sc-dark" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/430226388&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
     </div>
 
     <!-- MODALS -->
@@ -260,6 +261,11 @@
     </div></div>
 
     <div id="oc-view-modal"><div class="view-content"><div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div><div id="view-img" class="view-header-img"></div><div class="view-body"><h2 id="view-name" style="margin:0 0 5px 0;">Name</h2><p id="view-role" style="color:#888; margin:0 0 20px 0;">Role</p><div id="view-song-container"></div><div class="stat-grid"><div class="stat-box"><small>Age</small><span id="view-age">-</span></div><div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div><div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div></div><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Appearance</h4><p id="view-desc" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Personality</h4><p id="view-personality" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Lore</h4><p id="view-lore" style="color:#ccc; margin-top:0; white-space:pre-wrap;"></p><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="editOcFromView()">Edit</button><button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button></div></div></div></div>
+
+    <!-- NEW: FULL SCREEN IMAGE VIEWER -->
+    <div id="image-viewer-modal" onclick="document.getElementById('image-viewer-modal').style.display='none'">
+        <img id="full-image-src" style="max-width:90%; max-height:90%; border-radius:12px; box-shadow:0 0 50px rgba(0,0,0,0.8);">
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://icotzotkvdzytrrxtudq.supabase.co';
@@ -289,30 +295,10 @@
 
         // --- SOUNDCLOUD WIDGET LOGIC ---
         function toggleAmbience() { document.getElementById('ambience-controls').classList.toggle('visible'); }
-        
-        // This function pauses all SC widgets and then plays the requested one
-        function toggleSc(id) {
-            stopSc();
-            const iframe = document.getElementById('sc-' + id);
-            if(iframe) {
-                const widget = SC.Widget(iframe);
-                widget.play();
-                // Optionally set volume
-                widget.setVolume(50);
-            }
-        }
-        
-        function stopSc() {
-            ['lofi', 'rain', 'dark'].forEach(id => {
-                const iframe = document.getElementById('sc-' + id);
-                if(iframe) {
-                    const widget = SC.Widget(iframe);
-                    widget.pause();
-                }
-            });
-        }
+        function toggleSc(id) { stopSc(); const iframe = document.getElementById('sc-' + id); if(iframe) { const widget = SC.Widget(iframe); widget.play(); widget.setVolume(50); } }
+        function stopSc() { ['lofi', 'rain', 'dark'].forEach(id => { const iframe = document.getElementById('sc-' + id); if(iframe) { const widget = SC.Widget(iframe); widget.pause(); } }); }
 
-        // --- GALLERY ---
+        // --- GALLERY (FIXED: VIEWER MODAL) ---
         function toggleGalleryFilter() { galleryFilterMine = !galleryFilterMine; const btn = document.getElementById('btn-filter-mine'); if(galleryFilterMine) btn.classList.add('active'); else btn.classList.remove('active'); loadGallery(); }
         async function loadGallery() {
             const grid = document.getElementById('gallery-grid'); const search = document.getElementById('gallery-search-input').value.trim();
@@ -328,13 +314,20 @@
                         const isMine = img.uploaded_by === user.id;
                         const el = document.createElement('div');
                         el.style.border = '1px solid var(--border)'; el.style.borderRadius = '12px'; el.style.overflow = 'hidden'; el.style.background = 'var(--card)';
-                        el.innerHTML = `<div style="background:url('${img.url}') center/cover; height:180px; position:relative; cursor:pointer;" onclick="window.open('${img.url}')">${isMine ? `<button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}</div><div style="padding:12px;"><h4 style="margin:0 0 4px 0; font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name || 'Unnamed'}</h4><small style="color:#666; font-size:0.75rem;">${img.tags ? img.tags.join(', ') : ''}</small></div>`;
+                        // FIXED: onclick calls viewImage() instead of window.open()
+                        el.innerHTML = `<div style="background:url('${img.url}') center/cover; height:180px; position:relative; cursor:pointer;" onclick="viewImage('${img.url}')">${isMine ? `<button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}</div><div style="padding:12px;"><h4 style="margin:0 0 4px 0; font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name || 'Unnamed'}</h4><small style="color:#666; font-size:0.75rem;">${img.tags ? img.tags.join(', ') : ''}</small></div>`;
                         grid.appendChild(el);
                     });
                 } else { grid.innerHTML = '<div style="color:#666; grid-column:1/-1;">No images found.</div>'; }
             } catch(e) { console.log("Gallery error", e); }
         }
         function openGalleryModal() { document.getElementById('gallery-modal').style.display = 'flex'; document.getElementById('gallery-name').value = ""; document.getElementById('gallery-file').value = ""; document.getElementById('gallery-url').value = ""; document.getElementById('gallery-tags').value = ""; }
+        // NEW: View Image Function
+        function viewImage(url) {
+            document.getElementById('full-image-src').src = url;
+            document.getElementById('image-viewer-modal').style.display = 'flex';
+        }
+
         async function uploadFaceClaim() {
             const name = document.getElementById('gallery-name').value.trim(); const file = document.getElementById('gallery-file').files[0]; const urlInput = document.getElementById('gallery-url').value; const tagsInput = document.getElementById('gallery-tags').value;
             if(!name) return alert("Please enter the Face Claim Name.");
