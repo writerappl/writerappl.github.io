@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V38</title>
+    <title>Writer V40 (Final Polish)</title>
     <!-- Supabase (Fixed UMD Source) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -398,10 +398,19 @@
             
             if (!relations || relations.length === 0) { list.innerHTML = '<div style="padding:20px; color:#444; text-align:center;">No friends yet.</div>'; return; }
 
+            // *** DEDUPLICATION FIX ***
+            const seenFriendIds = new Set();
+
             for (const rel of relations) {
                 const isMeA = rel.user_a === user.id;
                 const friendId = isMeA ? rel.user_b : rel.user_a;
                 
+                // If we've already displayed this friend, skip this iteration
+                if (seenFriendIds.has(friendId)) continue;
+
+                // Mark this friend as seen
+                seenFriendIds.add(friendId);
+
                 // SAFE SELECT
                 const { data: friendProfile, error } = await db.from('profiles').select('*').eq('id', friendId).single();
                 
@@ -571,9 +580,13 @@
                     el.style.border = '1px solid var(--border)'; el.style.borderRadius = '12px'; el.style.overflow = 'hidden'; el.style.background = 'var(--card)';
                     
                     // Edit Button Logic (Only for owner)
+                    // FIX: Escape quotes in tag strings AND name strings
+                    const safeName = (img.name || '').replace(/'/g, "\\'");
+                    const safeTags = (img.tags || []).join(', ').replace(/'/g, "\\'");
+                    
                     const editBtn = isMine ? 
                         `<div style="position:absolute; top:8px; right:8px; display:flex; gap:5px;">
-                            <button onclick="event.stopPropagation(); openEditGalleryModal(${img.id}, '${img.name.replace(/'/g, "\\'")}', '${img.url}', '${img.gender || 'other'}', '${(img.tags || []).join(', ')}')" style="width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">✎</button>
+                            <button onclick="event.stopPropagation(); openEditGalleryModal(${img.id}, '${safeName}', '${img.url}', '${img.gender || 'other'}', '${safeTags}')" style="width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">✎</button>
                             <button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>
                          </div>` : '';
 
@@ -629,9 +642,16 @@
 
             let error;
             if (id) {
-                // UPDATE
-                const res = await db.from('face_claims').update(payload).eq('id', id);
-                error = res.error;
+                // UPDATE WITH DEBUG CHECK
+                // We add .select() to verify if the row was actually returned (updated)
+                const { data, error: err } = await db.from('face_claims').update(payload).eq('id', id).select();
+                error = err;
+                
+                // If no error, but data is empty, it means RLS blocked it (Permission Denied)
+                if (!error && data.length === 0) {
+                     alert("Update failed. Permission denied. Please run the SQL command to enable updates.");
+                     return;
+                }
             } else {
                 // INSERT
                 const res = await db.from('face_claims').insert([payload]);
