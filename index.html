@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V30</title>
+    <title>Writer V31</title>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SoundCloud API -->
-    <script src="https://w.soundcloud.com/player/api.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* --- CORE VARIABLES --- */
@@ -22,9 +20,12 @@
         .menu-btn { background: transparent; border: none; color: var(--dim); text-align: left; padding: 12px 15px; width: 100%; cursor: pointer; border-radius: 8px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: 0.2s; white-space: nowrap; }
         .menu-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .menu-btn.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
+        
+        /* PROFILE BUTTON (Fixed Visibility) */
         .profile-btn-container { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
-        .profile-btn { background: #1a1a1a; border: 1px solid #333; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .profile-btn { background: #1a1a1a; border: 1px solid #333; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; overflow: hidden; position: relative; }
         .profile-btn:hover { border-color: var(--blue); }
+        .avatar-sm { width: 100%; height: 100%; background: #1a1a1a center/cover; display: flex; align-items: center; justify-content: center; color: #555; }
 
         /* --- MAIN CONTENT --- */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
@@ -49,17 +50,6 @@
         .msg-row.mine .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
         .msg-row.mine .msg-name { display: none; }
 
-        /* --- AMBIENCE WIDGET (FIXED POSITION) --- */
-        #ambience-widget { position: fixed; bottom: 30px; right: 30px; z-index: 5000; display: flex; flex-direction: column; align-items: flex-end; }
-        #ambience-controls { background: #111; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; width: 200px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); opacity: 0; transform: translateY(10px); pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        #ambience-controls.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .ambience-btn { width: 100%; padding: 12px; background: #222; border: 1px solid #333; color: #ccc; border-radius: 8px; cursor: pointer; margin-bottom: 8px; text-align: left; font-size: 0.85rem; font-weight: 500; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .ambience-btn:hover { background: #2a2a2a; color: #fff; border-color: #444; }
-        .ambience-btn.stop { background: rgba(255,85,85,0.1); border-color: rgba(255,85,85,0.2); color: #ff5555; margin-bottom: 0; justify-content: center; }
-        .fab { width: 50px; height: 50px; border-radius: 50%; background: var(--blue); border: none; color: #fff; cursor: pointer; font-size: 1.4rem; box-shadow: 0 4px 15px rgba(0,149,246,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
-        .fab:active { transform: scale(0.95); }
-        .sc-hidden { position: absolute; top: -1000px; left: -1000px; visibility: hidden; width: 1px; height: 1px; }
-
         /* --- MOBILE --- */
         @media(max-width: 768px) {
             body { flex-direction: column; }
@@ -70,23 +60,19 @@
             .menu-btn.active { background: #1a1a1a; color: #fff; }
             .profile-btn-container { display: flex; margin: 0; padding: 0; border: none; margin-right: 10px; flex-shrink: 0; }
             .profile-btn { width: 40px; height: 40px; }
-            .avatar-sm { width: 32px; height: 32px; border: 2px solid var(--border); }
             .main-content { height: 100dvh; padding-bottom: var(--nav-height); }
             .section { padding: 20px; padding-bottom: 40px; }
             #tavern.section.active { height: 100%; padding-bottom: 0; }
             .chat-container { height: 100%; }
             .chat-input-area { position: static; padding: 10px 14px; }
             .profile-header { flex-direction: column; text-align: center; gap: 15px; }
-            
-            /* FIXED: Moved button up on mobile so it doesn't overlap chat */
-            #ambience-widget { bottom: 90px !important; right: 15px !important; }
         }
 
         /* --- UI COMPONENTS --- */
         .profile-container { max-width: 600px; margin: 0 auto; width: 100%; }
         .profile-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
         .profile-card { background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
-        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: #222 center/cover; border: 2px solid var(--border); }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: #222 center/cover; border: 2px solid var(--border); display:flex; align-items:center; justify-content:center; color:#444; font-size:2rem; }
         input, textarea, select { background: var(--card); border: 1px solid var(--border); color: #fff; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-family: 'Inter'; font-size: 16px; appearance: none; }
         button.btn { background: #fff; color: #000; border: none; padding: 12px 25px; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; transition: 0.2s; }
         button.btn-sec { background: rgba(255,255,255,0.05); color: #ccc; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; margin-top: 10px; }
@@ -156,7 +142,12 @@
             <button class="menu-btn" id="btn-names" onclick="nav('names')">Names</button>
         </div>
         <div class="profile-btn-container">
-            <button class="profile-btn" onclick="nav('profile')"><div id="nav-avatar" class="avatar-sm"></div></button>
+            <!-- FIXED PROFILE BUTTON: Has default icon content now -->
+            <button class="profile-btn" onclick="nav('profile')">
+                <div id="nav-avatar" class="avatar-sm">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+            </button>
         </div>
     </div>
 
@@ -186,7 +177,13 @@
         <div id="profile" class="section">
             <div class="profile-container">
                 <h2 style="margin-bottom:30px;">Your Profile</h2>
-                <div class="profile-header"><div id="profile-avatar" class="avatar-lg"></div><div><h3 id="profile-name" style="margin:0 0 5px; font-size:1.5rem;">User</h3><p id="profile-email" style="margin:0; color:var(--dim); font-size:0.95rem;">...</p></div></div>
+                <!-- Fixed Large Avatar Placeholder -->
+                <div class="profile-header">
+                    <div id="profile-avatar" class="avatar-lg">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div><h3 id="profile-name" style="margin:0 0 5px; font-size:1.5rem;">User</h3><p id="profile-email" style="margin:0; color:var(--dim); font-size:0.95rem;">...</p></div>
+                </div>
                 <div class="profile-card"><h4 style="margin-top:0; font-size:1.1rem; margin-bottom:20px;">Edit Profile</h4><label style="color:#888; font-size:0.85rem; margin-bottom:8px; display:block;">Username</label><input type="text" id="edit-username" placeholder="Choose a username"><label style="color:#888; font-size:0.85rem; margin-bottom:8px; display:block;">Avatar Image</label><input type="file" id="edit-avatar" accept="image/*" style="padding:10px 0; background:transparent; border:none; margin-bottom:20px;"><button class="btn" onclick="updateProfile()">Save Changes</button><button class="btn-sec" onclick="handleLogout()" style="color:#ff5555; border-color:rgba(255,85,85,0.2); width:100%; margin-top:15px;">Log Out</button></div>
             </div>
         </div>
@@ -222,23 +219,6 @@
         <div id="names" class="section"><h2>Names</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select><select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select><button class="btn" onclick="generateNames()" style="flex:2;">Generate</button></div><div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div></div>
     </div> 
 
-    <!-- AMBIENCE WIDGET (FIXED TRACKS) -->
-    <div id="ambience-widget">
-        <div id="ambience-controls">
-            <h4 style="margin:0 0 10px 0; color:#888; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Soundscapes</h4>
-            <button class="ambience-btn" onclick="toggleSc('lofi')">LO-FI BEATS</button>
-            <button class="ambience-btn" onclick="toggleSc('rain')">HEAVY RAIN</button>
-            <button class="ambience-btn" onclick="toggleSc('dark')">DARK SYNTH</button>
-            <button class="ambience-btn stop" onclick="stopSc()">STOP AUDIO</button>
-        </div>
-        <button class="fab" onclick="toggleAmbience()">🎵</button>
-        
-        <!-- SOUNDCLOUD PLAYERS (VERIFIED IDs) -->
-        <iframe id="sc-lofi" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1149957388&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
-        <iframe id="sc-rain" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/207982269&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
-        <iframe id="sc-dark" class="sc-hidden" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/430226388&color=%230095f6&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false"></iframe>
-    </div>
-
     <!-- MODALS -->
     <div id="oc-form-modal"><div class="form-container"><h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2><input type="hidden" id="form-id"><div class="form-section-title">Identity</div><div class="form-grid"><input type="text" id="form-name" placeholder="Full Name"><input type="text" id="form-role" placeholder="Role"></div><div class="form-grid"><input type="text" id="form-age" placeholder="Age"><input type="text" id="form-gender" placeholder="Gender"></div><div class="form-section-title">Visuals & Audio</div><label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Image</label><input type="file" id="form-image" accept="image/*"><textarea id="form-desc" rows="3" placeholder="Appearance"></textarea><input type="text" id="form-song" placeholder="Theme Song URL"><div class="form-section-title">Inner World</div><textarea id="form-personality" rows="3" placeholder="Personality"></textarea><input type="text" id="form-goals" placeholder="Goal"><div class="form-section-title">History</div><textarea id="form-lore" rows="6" placeholder="Lore"></textarea><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="saveOc()">Save</button><button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button></div></div></div>
     
@@ -262,7 +242,7 @@
 
     <div id="oc-view-modal"><div class="view-content"><div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div><div id="view-img" class="view-header-img"></div><div class="view-body"><h2 id="view-name" style="margin:0 0 5px 0;">Name</h2><p id="view-role" style="color:#888; margin:0 0 20px 0;">Role</p><div id="view-song-container"></div><div class="stat-grid"><div class="stat-box"><small>Age</small><span id="view-age">-</span></div><div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div><div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div></div><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Appearance</h4><p id="view-desc" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Personality</h4><p id="view-personality" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Lore</h4><p id="view-lore" style="color:#ccc; margin-top:0; white-space:pre-wrap;"></p><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="editOcFromView()">Edit</button><button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button></div></div></div></div>
 
-    <!-- NEW: FULL SCREEN IMAGE VIEWER -->
+    <!-- FULL SCREEN IMAGE VIEWER -->
     <div id="image-viewer-modal" onclick="document.getElementById('image-viewer-modal').style.display='none'">
         <img id="full-image-src" style="max-width:90%; max-height:90%; border-radius:12px; box-shadow:0 0 50px rgba(0,0,0,0.8);">
     </div>
@@ -293,12 +273,7 @@
         // --- NAVIGATION ---
         function nav(id) { document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); }); document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active')); const target = document.getElementById(id); if(target) { target.style.display = (id === 'tavern' && window.innerWidth > 768) ? 'flex' : 'block'; if(id === 'tavern' && window.innerWidth <= 768) target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if(id === 'tavern') setTimeout(scrollToBottom, 100); if(id === 'gallery') loadGallery(); }
 
-        // --- SOUNDCLOUD WIDGET LOGIC ---
-        function toggleAmbience() { document.getElementById('ambience-controls').classList.toggle('visible'); }
-        function toggleSc(id) { stopSc(); const iframe = document.getElementById('sc-' + id); if(iframe) { const widget = SC.Widget(iframe); widget.play(); widget.setVolume(50); } }
-        function stopSc() { ['lofi', 'rain', 'dark'].forEach(id => { const iframe = document.getElementById('sc-' + id); if(iframe) { const widget = SC.Widget(iframe); widget.pause(); } }); }
-
-        // --- GALLERY (FIXED: VIEWER MODAL) ---
+        // --- GALLERY ---
         function toggleGalleryFilter() { galleryFilterMine = !galleryFilterMine; const btn = document.getElementById('btn-filter-mine'); if(galleryFilterMine) btn.classList.add('active'); else btn.classList.remove('active'); loadGallery(); }
         async function loadGallery() {
             const grid = document.getElementById('gallery-grid'); const search = document.getElementById('gallery-search-input').value.trim();
@@ -314,7 +289,6 @@
                         const isMine = img.uploaded_by === user.id;
                         const el = document.createElement('div');
                         el.style.border = '1px solid var(--border)'; el.style.borderRadius = '12px'; el.style.overflow = 'hidden'; el.style.background = 'var(--card)';
-                        // FIXED: onclick calls viewImage() instead of window.open()
                         el.innerHTML = `<div style="background:url('${img.url}') center/cover; height:180px; position:relative; cursor:pointer;" onclick="viewImage('${img.url}')">${isMine ? `<button onclick="event.stopPropagation(); deleteFaceClaim(${img.id})" style="position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.6); color:#ff5555; border:none; cursor:pointer; font-weight:bold; font-size:16px; display:flex; align-items:center; justify-content:center;">×</button>` : ''}</div><div style="padding:12px;"><h4 style="margin:0 0 4px 0; font-size:0.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name || 'Unnamed'}</h4><small style="color:#666; font-size:0.75rem;">${img.tags ? img.tags.join(', ') : ''}</small></div>`;
                         grid.appendChild(el);
                     });
@@ -322,11 +296,7 @@
             } catch(e) { console.log("Gallery error", e); }
         }
         function openGalleryModal() { document.getElementById('gallery-modal').style.display = 'flex'; document.getElementById('gallery-name').value = ""; document.getElementById('gallery-file').value = ""; document.getElementById('gallery-url').value = ""; document.getElementById('gallery-tags').value = ""; }
-        // NEW: View Image Function
-        function viewImage(url) {
-            document.getElementById('full-image-src').src = url;
-            document.getElementById('image-viewer-modal').style.display = 'flex';
-        }
+        function viewImage(url) { document.getElementById('full-image-src').src = url; document.getElementById('image-viewer-modal').style.display = 'flex'; }
 
         async function uploadFaceClaim() {
             const name = document.getElementById('gallery-name').value.trim(); const file = document.getElementById('gallery-file').files[0]; const urlInput = document.getElementById('gallery-url').value; const tagsInput = document.getElementById('gallery-tags').value;
@@ -341,7 +311,23 @@
         async function deleteFaceClaim(id) { if(!confirm("Delete this face claim?")) return; const { error } = await db.from('face_claims').delete().eq('id', id); if(error) alert(error.message); else loadGallery(); }
 
         // --- PROFILE, OCS, NOTES, EXTRAS ---
-        async function loadProfile() { let { data } = await db.from('profiles').select('*').eq('id', user.id).single(); if (!data || !data.username) { document.getElementById('onboarding-modal').style.display = 'flex'; return; } myUsername = data.username; document.getElementById('profile-email').innerText = user.email; document.getElementById('profile-name').innerText = myUsername; document.getElementById('edit-username').value = myUsername; if(data.avatar_url) { document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`; document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`; } }
+        async function loadProfile() { 
+            let { data } = await db.from('profiles').select('*').eq('id', user.id).single(); 
+            if (!data || !data.username) { document.getElementById('onboarding-modal').style.display = 'flex'; return; } 
+            myUsername = data.username; 
+            document.getElementById('profile-email').innerText = user.email; 
+            document.getElementById('profile-name').innerText = myUsername; 
+            document.getElementById('edit-username').value = myUsername; 
+            
+            // Logic for Avatar Image vs Default Icon
+            if(data.avatar_url) { 
+                document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`; 
+                document.getElementById('profile-avatar').innerHTML = ''; // Remove SVG
+                
+                document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`; 
+                document.getElementById('nav-avatar').innerHTML = ''; // Remove SVG
+            }
+        }
         async function completeOnboarding() { const newName = document.getElementById('new-username').value.trim(); const msg = document.getElementById('onboard-msg'); if(newName.length < 3) { msg.innerText = "Username must be at least 3 characters."; return; } msg.innerText = "Setting up..."; const { data: existing } = await db.from('profiles').select('id').eq('username', newName).single(); if(existing && existing.id !== user.id) { msg.innerText = "That username is already taken."; return; } const { error } = await db.from('profiles').upsert({ id: user.id, username: newName }); if(error) { msg.innerText = "Error: " + error.message; } else { document.getElementById('onboarding-modal').style.display = 'none'; loadProfile(); } }
         async function updateProfile() { const username=document.getElementById('edit-username').value; const file=document.getElementById('edit-avatar').files[0]; let avatarUrl=null; if(file) avatarUrl=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const updates={id:user.id, username:username, updated_at:new Date()}; if(avatarUrl) updates.avatar_url=avatarUrl; await db.from('profiles').upsert(updates); alert("Saved!"); loadProfile(); }
         async function loadOcs() { const { data } = await db.from('characters').select('*').order('id', {ascending: false}); const list = document.getElementById('oc-list'); list.innerHTML = ""; if(!data) return; data.forEach(oc => { const el = document.createElement('div'); el.className = 'oc-card'; el.onclick = () => openViewModal(oc); const bg = oc.image ? `background-image: url('${oc.image}')` : `background-color: #222`; el.innerHTML = `<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role || 'No Role'}</small></div>`; list.appendChild(el); }); }
