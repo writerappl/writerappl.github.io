@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V31</title>
+    <title>Writer V32</title>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,8 +20,6 @@
         .menu-btn { background: transparent; border: none; color: var(--dim); text-align: left; padding: 12px 15px; width: 100%; cursor: pointer; border-radius: 8px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: 0.2s; white-space: nowrap; }
         .menu-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .menu-btn.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
-        
-        /* PROFILE BUTTON (Fixed Visibility) */
         .profile-btn-container { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
         .profile-btn { background: #1a1a1a; border: 1px solid #333; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; overflow: hidden; position: relative; }
         .profile-btn:hover { border-color: var(--blue); }
@@ -31,7 +29,8 @@
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .section { display: none; flex: 1; padding: 30px; overflow-y: auto; padding-top: calc(30px + var(--safe-top)); opacity: 0; transition: opacity 0.2s ease; }
         .section.active { display: block; opacity: 1; }
-        #tavern.section.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; height: 100%; }
+        #tavern.section.active, #social.section.active { display: flex; flex-direction: column; padding: 0; overflow: hidden; height: 100%; }
+        
         .chat-container { flex: 1; display: flex; flex-direction: column; background: #000; overflow: hidden; position: relative; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
         .chat-input-area { padding: 15px 20px; background: #000; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
@@ -50,6 +49,16 @@
         .msg-row.mine .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
         .msg-row.mine .msg-name { display: none; }
 
+        /* --- SOCIAL TAB --- */
+        .social-layout { display: flex; height: 100%; }
+        .friends-list { width: 280px; border-right: 1px solid var(--border); background: #050505; display: flex; flex-direction: column; overflow-y: auto; }
+        .friend-item { padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
+        .friend-item:hover { background: #111; }
+        .friend-item.active { background: #161616; border-left: 3px solid var(--blue); }
+        .request-item { padding: 15px; background: rgba(0,149,246,0.1); border-bottom: 1px solid var(--border); }
+        .private-chat-area { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
+        #private-chat-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #444; flex-direction: column; }
+        
         /* --- MOBILE --- */
         @media(max-width: 768px) {
             body { flex-direction: column; }
@@ -62,10 +71,12 @@
             .profile-btn { width: 40px; height: 40px; }
             .main-content { height: 100dvh; padding-bottom: var(--nav-height); }
             .section { padding: 20px; padding-bottom: 40px; }
-            #tavern.section.active { height: 100%; padding-bottom: 0; }
+            #tavern.section.active, #social.section.active { height: 100%; padding-bottom: 0; }
             .chat-container { height: 100%; }
             .chat-input-area { position: static; padding: 10px 14px; }
-            .profile-header { flex-direction: column; text-align: center; gap: 15px; }
+            .social-layout { flex-direction: column; }
+            .friends-list { width: 100%; height: auto; max-height: 40%; border-right: none; border-bottom: 1px solid var(--border); }
+            .private-chat-area { flex: 1; }
         }
 
         /* --- UI COMPONENTS --- */
@@ -89,7 +100,7 @@
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
         .auth-toggle { color: #888; margin-top: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
         #onboarding-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
-        #oc-form-modal, #oc-view-modal, #note-modal, #gallery-modal, #image-viewer-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+        #oc-form-modal, #oc-view-modal, #note-modal, #gallery-modal, #image-viewer-modal, #add-friend-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         .form-container { width: 100%; max-width: 700px; background: #000; padding: 30px; border-radius: 20px; border: 1px solid #333; margin: auto; }
         .view-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -133,16 +144,16 @@
         <div class="logo">writer.</div>
         <div class="nav-items">
             <button class="menu-btn active" id="btn-home" onclick="nav('home')">Home</button>
+            <button class="menu-btn" id="btn-social" onclick="nav('social')">Social 💬</button> <!-- NEW -->
             <button class="menu-btn" id="btn-ocs" onclick="nav('ocs')">Characters</button>
             <button class="menu-btn" id="btn-notes" onclick="nav('notes')">Notepad</button>
             <button class="menu-btn" id="btn-gallery" onclick="nav('gallery')">Face Claims</button>
-            <button class="menu-btn" id="btn-tavern" onclick="nav('tavern')">Chat</button>
+            <button class="menu-btn" id="btn-tavern" onclick="nav('tavern')">Public Chat</button>
             <button class="menu-btn" id="btn-dictionary" onclick="nav('dictionary')">Dictionary</button>
             <button class="menu-btn" id="btn-prompts" onclick="nav('prompts')">Prompts</button>
             <button class="menu-btn" id="btn-names" onclick="nav('names')">Names</button>
         </div>
         <div class="profile-btn-container">
-            <!-- FIXED PROFILE BUTTON: Has default icon content now -->
             <button class="profile-btn" onclick="nav('profile')">
                 <div id="nav-avatar" class="avatar-sm">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -164,6 +175,37 @@
             </div>
         </div>
 
+        <!-- NEW SOCIAL SECTION -->
+        <div id="social" class="section">
+            <div class="social-layout">
+                <div class="friends-list">
+                    <div style="padding:15px; border-bottom:1px solid var(--border);">
+                        <button class="btn" style="padding:8px; font-size:0.85rem;" onclick="document.getElementById('add-friend-modal').style.display='flex'">+ Add Friend</button>
+                    </div>
+                    <div id="friends-container">
+                        <div style="padding:20px; color:#666; font-size:0.85rem; text-align:center;">Loading...</div>
+                    </div>
+                </div>
+                <div class="private-chat-area">
+                    <div id="private-chat-placeholder">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" style="margin-bottom:10px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Select a friend to message.
+                    </div>
+                    <div id="active-chat-interface" style="display:none; flex-direction:column; height:100%;">
+                        <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:600; display:flex; align-items:center;">
+                            <div id="chat-header-avatar" style="width:30px; height:30px; border-radius:50%; background:#333; margin-right:10px;"></div>
+                            <span id="chat-header-name">Friend</span>
+                        </div>
+                        <div id="private-chat-box" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:10px;"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="private-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendPrivateMessage()">
+                            <button onclick="sendPrivateMessage()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="tavern" class="section">
             <div class="chat-container">
                 <div class="chat-messages" id="chat-box"><div style="text-align:center; color:#444; margin-top:50px;">Loading...</div></div>
@@ -177,7 +219,6 @@
         <div id="profile" class="section">
             <div class="profile-container">
                 <h2 style="margin-bottom:30px;">Your Profile</h2>
-                <!-- Fixed Large Avatar Placeholder -->
                 <div class="profile-header">
                     <div id="profile-avatar" class="avatar-lg">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -220,6 +261,15 @@
     </div> 
 
     <!-- MODALS -->
+    <div id="add-friend-modal"><div class="form-container" style="max-width:400px;">
+        <h2 style="margin-bottom:20px;">Add Friend</h2>
+        <input type="text" id="friend-username" placeholder="Enter username...">
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn" onclick="sendFriendRequest()">Send Request</button>
+            <button class="btn-sec" onclick="document.getElementById('add-friend-modal').style.display='none'">Cancel</button>
+        </div>
+    </div></div>
+
     <div id="oc-form-modal"><div class="form-container"><h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2><input type="hidden" id="form-id"><div class="form-section-title">Identity</div><div class="form-grid"><input type="text" id="form-name" placeholder="Full Name"><input type="text" id="form-role" placeholder="Role"></div><div class="form-grid"><input type="text" id="form-age" placeholder="Age"><input type="text" id="form-gender" placeholder="Gender"></div><div class="form-section-title">Visuals & Audio</div><label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Image</label><input type="file" id="form-image" accept="image/*"><textarea id="form-desc" rows="3" placeholder="Appearance"></textarea><input type="text" id="form-song" placeholder="Theme Song URL"><div class="form-section-title">Inner World</div><textarea id="form-personality" rows="3" placeholder="Personality"></textarea><input type="text" id="form-goals" placeholder="Goal"><div class="form-section-title">History</div><textarea id="form-lore" rows="6" placeholder="Lore"></textarea><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="saveOc()">Save</button><button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button></div></div></div>
     
     <div id="note-modal"><div class="form-container" style="max-width:500px;"><h2 id="note-title-header" style="margin-bottom:20px;">Edit Note</h2><input type="hidden" id="note-id"><input type="text" id="note-title" placeholder="Title"><textarea id="note-content" rows="10" placeholder="Write something..." style="font-family:monospace; line-height:1.5;"></textarea><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn" onclick="saveNote()">Save</button><button class="btn-sec" onclick="deleteNote()" id="btn-delete-note" style="color:#ff5555; border-color:#ff555533;">Delete</button><button class="btn-sec" onclick="document.getElementById('note-modal').style.display='none'">Cancel</button></div></div></div>
@@ -242,7 +292,6 @@
 
     <div id="oc-view-modal"><div class="view-content"><div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div><div id="view-img" class="view-header-img"></div><div class="view-body"><h2 id="view-name" style="margin:0 0 5px 0;">Name</h2><p id="view-role" style="color:#888; margin:0 0 20px 0;">Role</p><div id="view-song-container"></div><div class="stat-grid"><div class="stat-box"><small>Age</small><span id="view-age">-</span></div><div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div><div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div></div><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Appearance</h4><p id="view-desc" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Personality</h4><p id="view-personality" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Lore</h4><p id="view-lore" style="color:#ccc; margin-top:0; white-space:pre-wrap;"></p><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="editOcFromView()">Edit</button><button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button></div></div></div></div>
 
-    <!-- FULL SCREEN IMAGE VIEWER -->
     <div id="image-viewer-modal" onclick="document.getElementById('image-viewer-modal').style.display='none'">
         <img id="full-image-src" style="max-width:90%; max-height:90%; border-radius:12px; box-shadow:0 0 50px rgba(0,0,0,0.8);">
     </div>
@@ -253,15 +302,132 @@
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let user = null; let currentOc = null; let isSignupMode = false; let promptCache = {}; let nameCache = {}; let myUsername = "Writer"; let galleryFilterMine = false; 
+        let activeChatFriendId = null;
 
         // --- STARTUP ---
         async function checkSession() {
             try {
                 const { data } = await db.auth.getSession();
                 if (data.session && data.session.user) {
-                    user = data.session.user; document.getElementById('auth-screen').style.display = 'none'; await loadProfile(); loadOcs().catch(console.error); loadNotes().catch(console.error); initChat();
+                    user = data.session.user; document.getElementById('auth-screen').style.display = 'none'; await loadProfile(); loadOcs().catch(console.error); loadNotes().catch(console.error); initChat(); loadFriends();
                 } else { document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('onboarding-modal').style.display = 'none'; }
             } catch(e) { console.error("Auth error", e); document.getElementById('auth-screen').style.display = 'flex'; }
+        }
+
+        // --- SOCIAL LOGIC ---
+        async function sendFriendRequest() {
+            const targetName = document.getElementById('friend-username').value.trim();
+            if (!targetName) return alert("Enter a username");
+            
+            // 1. Find user by username
+            const { data: targetUser } = await db.from('profiles').select('id').eq('username', targetName).single();
+            if (!targetUser) return alert("User not found.");
+            if (targetUser.id === user.id) return alert("You cannot add yourself.");
+
+            // 2. Check if request exists
+            const { data: existing } = await db.from('friends').select('*').or(`and(user_a.eq.${user.id},user_b.eq.${targetUser.id}),and(user_a.eq.${targetUser.id},user_b.eq.${user.id})`);
+            if (existing && existing.length > 0) return alert("Request already sent or you are already friends.");
+
+            // 3. Send Request
+            const { error } = await db.from('friends').insert([{ user_a: user.id, user_b: targetUser.id, status: 'pending' }]);
+            if (error) alert("Error: " + error.message);
+            else { alert("Request sent!"); document.getElementById('add-friend-modal').style.display = 'none'; loadFriends(); }
+        }
+
+        async function loadFriends() {
+            const list = document.getElementById('friends-container');
+            list.innerHTML = "";
+
+            // Fetch relations where I am A or B
+            const { data: relations } = await db.from('friends').select('*').or(`user_a.eq.${user.id},user_b.eq.${user.id}`);
+            
+            if (!relations || relations.length === 0) { list.innerHTML = '<div style="padding:20px; color:#444; text-align:center;">No friends yet.</div>'; return; }
+
+            for (const rel of relations) {
+                const isMeA = rel.user_a === user.id;
+                const friendId = isMeA ? rel.user_b : rel.user_a;
+                const { data: friendProfile } = await db.from('profiles').select('username, avatar_url').eq('id', friendId).single();
+                
+                const div = document.createElement('div');
+                
+                if (rel.status === 'pending') {
+                    if (!isMeA) {
+                        // Incoming Request
+                        div.className = 'request-item';
+                        div.innerHTML = `<div><small style="color:#0095f6">Incoming Request</small><br><strong>${friendProfile.username}</strong></div><div><button class="btn" style="padding:5px 10px; font-size:0.7rem;" onclick="acceptFriend('${rel.id}')">Accept</button></div>`;
+                    } else {
+                        // Outgoing Request
+                        div.className = 'friend-item';
+                        div.innerHTML = `<div style="opacity:0.5">Pending: ${friendProfile.username}</div>`;
+                    }
+                } else {
+                    // Accepted Friend
+                    div.className = 'friend-item';
+                    div.onclick = () => openPrivateChat(friendId, friendProfile);
+                    const av = friendProfile.avatar_url ? `background-image:url('${friendProfile.avatar_url}')` : 'background:#333';
+                    div.innerHTML = `<div style="width:32px; height:32px; border-radius:50%; ${av}; background-size:cover;"></div><span>${friendProfile.username}</span>`;
+                }
+                list.appendChild(div);
+            }
+        }
+
+        async function acceptFriend(id) {
+            await db.from('friends').update({ status: 'accepted' }).eq('id', id);
+            loadFriends();
+        }
+
+        async function openPrivateChat(friendId, friendProfile) {
+            activeChatFriendId = friendId;
+            document.getElementById('private-chat-placeholder').style.display = 'none';
+            document.getElementById('active-chat-interface').style.display = 'flex';
+            document.getElementById('chat-header-name').innerText = friendProfile.username;
+            
+            const av = document.getElementById('chat-header-avatar');
+            av.style.backgroundImage = friendProfile.avatar_url ? `url('${friendProfile.avatar_url}')` : 'none';
+            av.style.backgroundSize = 'cover';
+
+            loadPrivateMessages();
+            
+            // Subscribe to new messages
+            db.channel('private:' + friendId).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, payload => {
+                if ((payload.new.sender_id === user.id && payload.new.receiver_id === friendId) || (payload.new.sender_id === friendId && payload.new.receiver_id === user.id)) {
+                    appendPrivateMessage(payload.new);
+                }
+            }).subscribe();
+        }
+
+        async function loadPrivateMessages() {
+            const box = document.getElementById('private-chat-box');
+            box.innerHTML = '<div style="color:#444; text-align:center;">Loading...</div>';
+            
+            const { data } = await db.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${activeChatFriendId}),and(sender_id.eq.${activeChatFriendId},receiver_id.eq.${user.id})`).order('created_at', { ascending: true });
+            
+            box.innerHTML = "";
+            if (data) data.forEach(msg => appendPrivateMessage(msg));
+            scrollToPrivateBottom();
+        }
+
+        async function sendPrivateMessage() {
+            const input = document.getElementById('private-input');
+            const text = input.value.trim();
+            if(!text || !activeChatFriendId) return;
+            input.value = "";
+            await db.from('private_messages').insert([{ sender_id: user.id, receiver_id: activeChatFriendId, content: text }]);
+        }
+
+        function appendPrivateMessage(msg) {
+            const box = document.getElementById('private-chat-box');
+            const isMe = msg.sender_id === user.id;
+            const div = document.createElement('div');
+            div.className = isMe ? 'msg-row mine' : 'msg-row theirs';
+            div.innerHTML = `<div class="msg-bubble">${msg.content}</div>`;
+            box.appendChild(div);
+            scrollToPrivateBottom();
+        }
+
+        function scrollToPrivateBottom() {
+            const box = document.getElementById('private-chat-box');
+            requestAnimationFrame(() => box.scrollTop = box.scrollHeight);
         }
 
         // --- AUTH ---
@@ -271,7 +437,7 @@
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
         // --- NAVIGATION ---
-        function nav(id) { document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); }); document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active')); const target = document.getElementById(id); if(target) { target.style.display = (id === 'tavern' && window.innerWidth > 768) ? 'flex' : 'block'; if(id === 'tavern' && window.innerWidth <= 768) target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if(id === 'tavern') setTimeout(scrollToBottom, 100); if(id === 'gallery') loadGallery(); }
+        function nav(id) { document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); }); document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active')); const target = document.getElementById(id); if(target) { target.style.display = (id === 'tavern' || id === 'social' && window.innerWidth > 768) ? 'flex' : 'block'; if((id === 'tavern' || id === 'social') && window.innerWidth <= 768) target.style.display = 'flex'; setTimeout(() => target.classList.add('active'), 10); } const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if(id === 'tavern') setTimeout(scrollToBottom, 100); if(id === 'gallery') loadGallery(); if(id === 'social') loadFriends(); }
 
         // --- GALLERY ---
         function toggleGalleryFilter() { galleryFilterMine = !galleryFilterMine; const btn = document.getElementById('btn-filter-mine'); if(galleryFilterMine) btn.classList.add('active'); else btn.classList.remove('active'); loadGallery(); }
@@ -319,13 +485,11 @@
             document.getElementById('profile-name').innerText = myUsername; 
             document.getElementById('edit-username').value = myUsername; 
             
-            // Logic for Avatar Image vs Default Icon
             if(data.avatar_url) { 
                 document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`; 
-                document.getElementById('profile-avatar').innerHTML = ''; // Remove SVG
-                
+                document.getElementById('profile-avatar').innerHTML = ''; 
                 document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`; 
-                document.getElementById('nav-avatar').innerHTML = ''; // Remove SVG
+                document.getElementById('nav-avatar').innerHTML = ''; 
             }
         }
         async function completeOnboarding() { const newName = document.getElementById('new-username').value.trim(); const msg = document.getElementById('onboard-msg'); if(newName.length < 3) { msg.innerText = "Username must be at least 3 characters."; return; } msg.innerText = "Setting up..."; const { data: existing } = await db.from('profiles').select('id').eq('username', newName).single(); if(existing && existing.id !== user.id) { msg.innerText = "That username is already taken."; return; } const { error } = await db.from('profiles').upsert({ id: user.id, username: newName }); if(error) { msg.innerText = "Error: " + error.message; } else { document.getElementById('onboarding-modal').style.display = 'none'; loadProfile(); } }
