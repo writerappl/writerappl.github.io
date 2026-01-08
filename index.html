@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V18</title>
+    <title>Writer V19 (Launch)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -219,8 +219,10 @@
         .oc-card h3 { margin: 0; font-size: 1rem; font-weight: 600; }
 
         /* --- AUTH & MODALS --- */
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
         .auth-toggle { color: #888; margin-top: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+        
+        #onboarding-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
         
         #oc-form-modal, #oc-view-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         .form-container { width: 100%; max-width: 700px; background: #000; padding: 30px; border-radius: 20px; border: 1px solid #333; margin: auto; }
@@ -248,6 +250,17 @@
             <button class="btn" id="signup-btn" onclick="performSignup()" style="display:none; background:#222; color:#fff; border:1px solid #444;">Create Account</button>
             <p id="auth-msg" style="color:#ff5555; font-size:0.9rem; margin-top:15px; text-align:center; min-height:20px;"></p>
             <div id="auth-toggle-link" class="auth-toggle" onclick="toggleAuthMode()">Need an account? Sign Up</div>
+        </div>
+    </div>
+    
+    <!-- ONBOARDING MODAL -->
+    <div id="onboarding-modal">
+        <h1 style="margin-bottom:10px;">Welcome to writer.</h1>
+        <p style="color:#888; margin-bottom:30px; text-align:center;">Choose a unique username to begin.</p>
+        <div style="width:100%; max-width:320px;">
+            <input type="text" id="new-username" placeholder="Username" style="text-align:center;">
+            <button class="btn" onclick="completeOnboarding()">Get Started</button>
+            <p id="onboard-msg" style="color:#ff5555; margin-top:15px; text-align:center; font-size:0.9rem; min-height:20px;"></p>
         </div>
     </div>
 
@@ -330,12 +343,12 @@
 
         <!-- PROMPTS -->
         <div id="prompts" class="section">
-            <h2>Prompts</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="prompt-genre" style="margin-bottom:0;"><option value="romance">Romance</option><option value="horror">Horror</option><option value="fantasy">Fantasy</option><option value="scifi">Sci-Fi</option></select><button class="btn" onclick="generatePrompt()">Generate</button></div><div class="result-box"><div id="prompt-result" style="font-size:1.2rem;">Select a genre...</div><button class="btn-sec" onclick="generatePrompt()">Re-Roll ?</button></div>
+            <h2>Prompts</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="prompt-genre" style="margin-bottom:0;"><option value="romance">Romance</option><option value="horror">Horror</option><option value="fantasy">Fantasy</option><option value="scifi">Sci-Fi</option></select><button class="btn" onclick="generatePrompt()">Generate</button></div><div class="result-box"><div id="prompt-result" style="font-size:1.2rem;">Select a genre...</div><button class="btn-sec" onclick="generatePrompt()">Re-Roll ↻</button></div>
         </div>
 
         <!-- NAMES -->
         <div id="names" class="section">
-            <h2>Names</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select><select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select><button class="btn" onclick="generateNames()" style="flex:2;">Generate</button></div><div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ?</button></div>
+            <h2>Names</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select><select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select><button class="btn" onclick="generateNames()" style="flex:2;">Generate</button></div><div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div>
         </div>
         
         <!-- MODALS -->
@@ -354,12 +367,22 @@
         async function checkSession() {
             try {
                 const { data } = await db.auth.getSession();
-                if (data.session) {
+                if (data.session && data.session.user) {
                     user = data.session.user;
+                    // User is signed in -> HIDE Auth, SHOW App
                     document.getElementById('auth-screen').style.display = 'none';
-                    loadProfile(); loadOcs(); initChat();
-                } else { document.getElementById('auth-screen').style.display = 'flex'; }
-            } catch(e) { console.error("Auth error", e); }
+                    loadProfile(); 
+                    loadOcs(); 
+                    initChat();
+                } else { 
+                    // No User -> SHOW Auth, HIDE Onboarding
+                    document.getElementById('auth-screen').style.display = 'flex';
+                    document.getElementById('onboarding-modal').style.display = 'none';
+                }
+            } catch(e) { 
+                console.error("Auth error", e); 
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
         }
 
         // --- AUTH ---
@@ -383,10 +406,7 @@
             const target = document.getElementById(id);
             if(target) {
                 target.style.display = (id === 'tavern' && window.innerWidth > 768) ? 'flex' : 'block';
-                // Special Mobile Check for Chat
                 if(id === 'tavern' && window.innerWidth <= 768) target.style.display = 'flex';
-                
-                // Allow browser to render display:block before adding opacity class
                 setTimeout(() => target.classList.add('active'), 10);
             }
 
@@ -398,60 +418,31 @@
             if(id === 'tavern') setTimeout(scrollToBottom, 100);
         }
 
-        // --- CORE ---
+        // --- CORE & ONBOARDING ---
         async function loadProfile() {
-    // 1. Try to get the profile
-    let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
+            let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
 
-    // 2. If NO profile exists, or username is NULL/Empty -> FORCE ONBOARDING
-    if (!data || !data.username) {
-        document.getElementById('onboarding-modal').style.display = 'flex';
-        return; // Stop here! Don't let them see the app yet.
-    }
+            // Force Onboarding if no profile/username
+            if (!data || !data.username) {
+                document.getElementById('onboarding-modal').style.display = 'flex';
+                return;
+            }
 
-    // 3. If we have a profile, load the app as normal
-    myUsername = data.username;
-    
-    // Update UI elements
-    document.getElementById('profile-email').innerText = user.email;
-    document.getElementById('profile-name').innerText = myUsername;
-    document.getElementById('edit-username').value = myUsername;
-    
-    if(data.avatar_url) {
-        document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`;
-        document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`;
-    }
-}
+            myUsername = data.username;
+            document.getElementById('profile-email').innerText = user.email; document.getElementById('profile-name').innerText = myUsername; document.getElementById('edit-username').value = myUsername;
+            if(data.avatar_url) { document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`; document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`; }
+        }
 
-async function completeOnboarding() {
-    const newName = document.getElementById('new-username').value.trim();
-    const msg = document.getElementById('onboard-msg');
-    
-    if(newName.length < 3) {
-        msg.innerText = "Username must be at least 3 characters.";
-        return;
-    }
-
-    msg.innerText = "Setting up...";
-    
-    // Check if taken (optional, but good practice)
-    const { data: existing } = await db.from('profiles').select('id').eq('username', newName).single();
-    if(existing && existing.id !== user.id) {
-        msg.innerText = "That username is already taken.";
-        return;
-    }
-
-    // Save to DB
-    const { error } = await db.from('profiles').upsert({ id: user.id, username: newName });
-
-    if(error) {
-        msg.innerText = "Error: " + error.message;
-    } else {
-        // Success! Hide modal and load app
-        document.getElementById('onboarding-modal').style.display = 'none';
-        loadProfile(); // Reload to fill the UI
-    }
-}
+        async function completeOnboarding() {
+            const newName = document.getElementById('new-username').value.trim();
+            const msg = document.getElementById('onboard-msg');
+            if(newName.length < 3) { msg.innerText = "Username must be at least 3 characters."; return; }
+            msg.innerText = "Setting up...";
+            const { data: existing } = await db.from('profiles').select('id').eq('username', newName).single();
+            if(existing && existing.id !== user.id) { msg.innerText = "That username is already taken."; return; }
+            const { error } = await db.from('profiles').upsert({ id: user.id, username: newName });
+            if(error) { msg.innerText = "Error: " + error.message; } else { document.getElementById('onboarding-modal').style.display = 'none'; loadProfile(); }
+        }
 
         async function updateProfile() { const username=document.getElementById('edit-username').value; const file=document.getElementById('edit-avatar').files[0]; let avatarUrl=null; if(file) avatarUrl=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const updates={id:user.id, username:username, updated_at:new Date()}; if(avatarUrl) updates.avatar_url=avatarUrl; await db.from('profiles').upsert(updates); alert("Saved!"); loadProfile(); }
 
@@ -491,20 +482,10 @@ async function completeOnboarding() {
             const box = document.getElementById('chat-box'); 
             requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; }); 
         }
-<!-- ONBOARDING MODAL (Cannot be closed without saving) -->
-<div id="onboarding-modal" style="display:none; position:fixed; inset:0; background:#000; z-index:10000; flex-direction:column; justify-content:center; align-items:center; padding:30px;">
-    <h1 style="margin-bottom:10px;">Welcome to writer.</h1>
-    <p style="color:#888; margin-bottom:30px; text-align:center;">Choose a unique username to begin.</p>
-    <div style="width:100%; max-width:320px;">
-        <input type="text" id="new-username" placeholder="Username" style="text-align:center;">
-        <button class="btn" onclick="completeOnboarding()">Get Started</button>
-        <p id="onboard-msg" style="color:#ff5555; margin-top:15px; text-align:center; font-size:0.9rem; min-height:20px;"></p>
-    </div>
-</div>
 
         // --- TOOLS ---
         async function loadOcs() { const {data}=await db.from('characters').select('*').order('id',{ascending:false}); const list=document.getElementById('oc-list'); list.innerHTML=""; (data||[]).forEach(oc=>{ const el=document.createElement('div'); el.className='oc-card'; el.onclick=()=>openViewModal(oc); const bg=oc.image?`background-image: url('${oc.image}')`:`background-color: #222`; el.innerHTML=`<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role||'No Role'}</small></div>`; list.appendChild(el); }); }
-        function openViewModal(oc) { currentOc=oc; document.getElementById('view-name').innerText=oc.name; document.getElementById('view-role').innerText=oc.role||"Unknown Role"; document.getElementById('view-age').innerText=oc.age||"-"; document.getElementById('view-gender').innerText=oc.gender||"-"; document.getElementById('view-goal').innerText=oc.goals||"-"; document.getElementById('view-desc').innerText=oc.desc||"No physical description."; document.getElementById('view-personality').innerText=oc.personality||"No personality details."; document.getElementById('view-lore').innerText=oc.lore||"No backstory logged."; const imgHeader=document.getElementById('view-img'); if(oc.image){imgHeader.style.backgroundImage=`url('${oc.image}')`;imgHeader.style.display='block';}else{imgHeader.style.display='none';} const songContainer=document.getElementById('view-song-container'); songContainer.innerHTML=""; if(oc.theme_song){ if(oc.theme_song.includes('youtube.com')||oc.theme_song.includes('youtu.be')){ let vId=oc.theme_song.split('v=')[1]; if(!vId&&oc.theme_song.includes('youtu.be'))vId=oc.theme_song.split('/').pop(); if(vId){ const amp=vId.indexOf('&'); if(amp!==-1)vId=vId.substring(0,amp); songContainer.innerHTML=`<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:12px; margin-bottom:20px;"></iframe>`; } }else{ songContainer.innerHTML=`<a href="${oc.theme_song}" target="_blank" class="theme-btn">? Play Theme Song</a>`; } } document.getElementById('oc-view-modal').style.display='flex'; }
+        function openViewModal(oc) { currentOc=oc; document.getElementById('view-name').innerText=oc.name; document.getElementById('view-role').innerText=oc.role||"Unknown Role"; document.getElementById('view-age').innerText=oc.age||"-"; document.getElementById('view-gender').innerText=oc.gender||"-"; document.getElementById('view-goal').innerText=oc.goals||"-"; document.getElementById('view-desc').innerText=oc.desc||"No physical description."; document.getElementById('view-personality').innerText=oc.personality||"No personality details."; document.getElementById('view-lore').innerText=oc.lore||"No backstory logged."; const imgHeader=document.getElementById('view-img'); if(oc.image){imgHeader.style.backgroundImage=`url('${oc.image}')`;imgHeader.style.display='block';}else{imgHeader.style.display='none';} const songContainer=document.getElementById('view-song-container'); songContainer.innerHTML=""; if(oc.theme_song){ if(oc.theme_song.includes('youtube.com')||oc.theme_song.includes('youtu.be')){ let vId=oc.theme_song.split('v=')[1]; if(!vId&&oc.theme_song.includes('youtu.be'))vId=oc.theme_song.split('/').pop(); if(vId){ const amp=vId.indexOf('&'); if(amp!==-1)vId=vId.substring(0,amp); songContainer.innerHTML=`<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:12px; margin-bottom:20px;"></iframe>`; } }else{ songContainer.innerHTML=`<a href="${oc.theme_song}" target="_blank" class="theme-btn">▶ Play Theme Song</a>`; } } document.getElementById('oc-view-modal').style.display='flex'; }
         function openOcForm(isEdit=false) { document.getElementById('oc-form-modal').style.display='block'; if(isEdit&&currentOc){ document.getElementById('form-title').innerText="Edit Character"; document.getElementById('form-id').value=currentOc.id; document.getElementById('form-name').value=currentOc.name; document.getElementById('form-role').value=currentOc.role; document.getElementById('form-age').value=currentOc.age; document.getElementById('form-gender').value=currentOc.gender; document.getElementById('form-desc').value=currentOc.desc; document.getElementById('form-personality').value=currentOc.personality; document.getElementById('form-goals').value=currentOc.goals; document.getElementById('form-lore').value=currentOc.lore; document.getElementById('form-song').value=currentOc.theme_song||""; }else{ document.getElementById('form-title').innerText="New Character"; document.getElementById('form-id').value=""; document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i=>i.value=""); } }
         function editOcFromView() { document.getElementById('oc-view-modal').style.display='none'; openOcForm(true); }
         async function saveOc() { const id=document.getElementById('form-id').value; const name=document.getElementById('form-name').value; if(!name)return alert("Name is required"); const file=document.getElementById('form-image').files[0]; let imageBase64=null; if(file)imageBase64=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const ocData={ user_id:user.id, name:name, role:document.getElementById('form-role').value, age:document.getElementById('form-age').value, gender:document.getElementById('form-gender').value, "desc":document.getElementById('form-desc').value, personality:document.getElementById('form-personality').value, goals:document.getElementById('form-goals').value, lore:document.getElementById('form-lore').value, theme_song:document.getElementById('form-song').value }; if(imageBase64)ocData.image=imageBase64; if(id)await db.from('characters').update(ocData).eq('id',id); else await db.from('characters').insert([ocData]); document.getElementById('oc-form-modal').style.display='none'; loadOcs(); }
