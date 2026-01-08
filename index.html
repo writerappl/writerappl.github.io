@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V19</title>
+    <title>Writer V20</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -224,7 +224,7 @@
         
         #onboarding-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 10000; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
         
-        #oc-form-modal, #oc-view-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
+        #oc-form-modal, #oc-view-modal, #note-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; padding: 20px; overflow-y: auto; backdrop-filter: blur(5px); justify-content: center; align-items: center; }
         .form-container { width: 100%; max-width: 700px; background: #000; padding: 30px; border-radius: 20px; border: 1px solid #333; margin: auto; }
         .view-content { background: #0a0a0a; border: 1px solid #333; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -263,21 +263,6 @@
             <p id="onboard-msg" style="color:#ff5555; margin-top:15px; text-align:center; font-size:0.9rem; min-height:20px;"></p>
         </div>
     </div>
-<!-- NOTE MODAL -->
-<div id="note-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; padding:20px; justify-content:center; align-items:center;">
-    <div class="form-container" style="max-width:500px;">
-        <h2 id="note-title-header" style="margin-bottom:20px;">Edit Note</h2>
-        <input type="hidden" id="note-id">
-        <input type="text" id="note-title" placeholder="Title">
-        <textarea id="note-content" rows="10" placeholder="Write something..." style="font-family:monospace; line-height:1.5;"></textarea>
-        
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn" onclick="saveNote()">Save</button>
-            <button class="btn-sec" onclick="deleteNote()" id="btn-delete-note" style="color:#ff5555; border-color:#ff555533;">Delete</button>
-            <button class="btn-sec" onclick="document.getElementById('note-modal').style.display='none'">Cancel</button>
-        </div>
-    </div>
-</div>
 
     <!-- NAVIGATION -->
     <div class="sidebar">
@@ -285,7 +270,7 @@
         <div class="nav-items">
             <button class="menu-btn active" id="btn-home" onclick="nav('home')">Home</button>
             <button class="menu-btn" id="btn-ocs" onclick="nav('ocs')">Characters</button>
-            <button class="menu-btn" id="btn-notes" onclick="nav('notes')">Notepad</button>
+            <button class="menu-btn" id="btn-notes" onclick="nav('notes')">Notepad</button> <!-- NEW -->
             <button class="menu-btn" id="btn-tavern" onclick="nav('tavern')">Chat</button>
             <button class="menu-btn" id="btn-dictionary" onclick="nav('dictionary')">Dictionary</button>
             <button class="menu-btn" id="btn-prompts" onclick="nav('prompts')">Prompts</button>
@@ -323,7 +308,7 @@
             </div>
         </div>
 
-        <!-- PROFILE (Refined Layout) -->
+        <!-- PROFILE -->
         <div id="profile" class="section">
             <div class="profile-container">
                 <h2 style="margin-bottom:30px;">Your Profile</h2>
@@ -351,14 +336,12 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>Character Vault</h2><button class="btn" onclick="openOcForm()" style="width:auto; padding:10px 20px;">+ New</button></div>
             <div id="oc-list" class="oc-grid"></div>
         </div>
-<!-- NOTEPAD -->
-<div id="notes" class="section">
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-        <h2>Notepad</h2>
-        <button class="btn" onclick="openNoteModal()" style="width:auto; padding:10px 20px;">+ New Note</button>
-    </div>
-    <div id="notes-list" class="oc-grid"></div>
-</div>
+
+        <!-- NOTEPAD (NEW) -->
+        <div id="notes" class="section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h2>Notepad</h2><button class="btn" onclick="openNoteModal()" style="width:auto; padding:10px 20px;">+ New Note</button></div>
+            <div id="notes-list" class="oc-grid"></div>
+        </div>
 
         <!-- DICTIONARY -->
         <div id="dictionary" class="section">
@@ -373,10 +356,15 @@
         <!-- NAMES -->
         <div id="names" class="section">
             <h2>Names</h2><div style="display:flex; gap:10px; margin-bottom:20px;"><select id="name-gender" style="margin-bottom:0; flex:2;"><option value="neutral">Neutral</option><option value="fem">Feminine</option><option value="masc">Masculine</option></select><select id="name-count" style="margin-bottom:0; flex:1;"><option value="1">1</option><option value="5">5</option><option value="10">10</option></select><button class="btn" onclick="generateNames()" style="flex:2;">Generate</button></div><div class="result-box"><div id="name-result">Names appear here...</div><button class="btn-sec" onclick="generateNames()">Re-Roll ↻</button></div>
-        </div>
         
         <!-- MODALS -->
+        <!-- OC FORM -->
         <div id="oc-form-modal"><div class="form-container"><h2 id="form-title" style="margin-bottom:20px;">Character Sheet</h2><input type="hidden" id="form-id"><div class="form-section-title">Identity</div><div class="form-grid"><input type="text" id="form-name" placeholder="Full Name"><input type="text" id="form-role" placeholder="Role"></div><div class="form-grid"><input type="text" id="form-age" placeholder="Age"><input type="text" id="form-gender" placeholder="Gender"></div><div class="form-section-title">Visuals & Audio</div><label style="color:#888; font-size:0.8rem; display:block; margin-bottom:5px;">Image</label><input type="file" id="form-image" accept="image/*"><textarea id="form-desc" rows="3" placeholder="Appearance"></textarea><input type="text" id="form-song" placeholder="Theme Song URL"><div class="form-section-title">Inner World</div><textarea id="form-personality" rows="3" placeholder="Personality"></textarea><input type="text" id="form-goals" placeholder="Goal"><div class="form-section-title">History</div><textarea id="form-lore" rows="6" placeholder="Lore"></textarea><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="saveOc()">Save</button><button class="btn-sec" onclick="document.getElementById('oc-form-modal').style.display='none'">Cancel</button></div></div></div>
+        
+        <!-- NOTE FORM (NEW) -->
+        <div id="note-modal"><div class="form-container" style="max-width:500px;"><h2 id="note-title-header" style="margin-bottom:20px;">Edit Note</h2><input type="hidden" id="note-id"><input type="text" id="note-title" placeholder="Title"><textarea id="note-content" rows="10" placeholder="Write something..." style="font-family:monospace; line-height:1.5;"></textarea><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn" onclick="saveNote()">Save</button><button class="btn-sec" onclick="deleteNote()" id="btn-delete-note" style="color:#ff5555; border-color:#ff555533;">Delete</button><button class="btn-sec" onclick="document.getElementById('note-modal').style.display='none'">Cancel</button></div></div></div>
+
+        <!-- OC VIEW -->
         <div id="oc-view-modal"><div class="view-content"><div class="close-btn" onclick="document.getElementById('oc-view-modal').style.display='none'">×</div><div id="view-img" class="view-header-img"></div><div class="view-body"><h2 id="view-name" style="margin:0 0 5px 0;">Name</h2><p id="view-role" style="color:#888; margin:0 0 20px 0;">Role</p><div id="view-song-container"></div><div class="stat-grid"><div class="stat-box"><small>Age</small><span id="view-age">-</span></div><div class="stat-box"><small>Gender</small><span id="view-gender">-</span></div><div class="stat-box"><small>Goal</small><span id="view-goal">-</span></div></div><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Appearance</h4><p id="view-desc" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Personality</h4><p id="view-personality" style="color:#ccc; margin-top:0;"></p><h4 style="color:#666; margin-bottom:5px; text-transform:uppercase; font-size:0.8rem;">Lore</h4><p id="view-lore" style="color:#ccc; margin-top:0; white-space:pre-wrap;"></p><div style="display:flex; gap:10px; margin-top:30px;"><button class="btn" onclick="editOcFromView()">Edit</button><button class="btn-sec" onclick="deleteOc()" style="color:#ff5555; border-color:#ff555533;">Delete</button></div></div></div></div>
 
     </div>
@@ -393,14 +381,12 @@
                 const { data } = await db.auth.getSession();
                 if (data.session && data.session.user) {
                     user = data.session.user;
-                    // User is signed in -> HIDE Auth, SHOW App
                     document.getElementById('auth-screen').style.display = 'none';
                     loadProfile(); 
-                    loadOcs();
-                    loadNotes();
+                    loadOcs(); 
+                    loadNotes(); // NEW
                     initChat();
                 } else { 
-                    // No User -> SHOW Auth, HIDE Onboarding
                     document.getElementById('auth-screen').style.display = 'flex';
                     document.getElementById('onboarding-modal').style.display = 'none';
                 }
@@ -416,48 +402,29 @@
         async function performSignup() { const email=document.getElementById('email').value; const password=document.getElementById('password').value; const msg=document.getElementById('auth-msg'); msg.innerText="Creating account..."; const {data,error}=await db.auth.signUp({email,password}); if(error)msg.innerText=error.message; else{ msg.innerText="Success! You are logged in."; setTimeout(()=>location.reload(),1000); } }
         async function handleLogout() { await db.auth.signOut(); location.reload(); }
 
-        // --- NAV (STRICT OVERLAP FIX) ---
+        // --- NAV ---
         function nav(id) { 
-            // 1. Force hide all sections first
-            document.querySelectorAll('.section').forEach(s => {
-                s.style.display = 'none'; 
-                s.classList.remove('active');
-            });
-
-            // 2. Clear buttons
+            document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active')); 
-
-            // 3. Show target
             const target = document.getElementById(id);
             if(target) {
                 target.style.display = (id === 'tavern' && window.innerWidth > 768) ? 'flex' : 'block';
                 if(id === 'tavern' && window.innerWidth <= 768) target.style.display = 'flex';
                 setTimeout(() => target.classList.add('active'), 10);
             }
-
-            // 4. Highlight button
             const btn = document.getElementById('btn-' + id); 
             if(btn) btn.classList.add('active'); 
-            
-            // Chat scroll fix
             if(id === 'tavern') setTimeout(scrollToBottom, 100);
         }
 
         // --- CORE & ONBOARDING ---
         async function loadProfile() {
             let { data } = await db.from('profiles').select('*').eq('id', user.id).single();
-
-            // Force Onboarding if no profile/username
-            if (!data || !data.username) {
-                document.getElementById('onboarding-modal').style.display = 'flex';
-                return;
-            }
-
+            if (!data || !data.username) { document.getElementById('onboarding-modal').style.display = 'flex'; return; }
             myUsername = data.username;
             document.getElementById('profile-email').innerText = user.email; document.getElementById('profile-name').innerText = myUsername; document.getElementById('edit-username').value = myUsername;
             if(data.avatar_url) { document.getElementById('profile-avatar').style.backgroundImage = `url('${data.avatar_url}')`; document.getElementById('nav-avatar').style.backgroundImage = `url('${data.avatar_url}')`; }
         }
-
         async function completeOnboarding() {
             const newName = document.getElementById('new-username').value.trim();
             const msg = document.getElementById('onboard-msg');
@@ -468,7 +435,6 @@
             const { error } = await db.from('profiles').upsert({ id: user.id, username: newName });
             if(error) { msg.innerText = "Error: " + error.message; } else { document.getElementById('onboarding-modal').style.display = 'none'; loadProfile(); }
         }
-
         async function updateProfile() { const username=document.getElementById('edit-username').value; const file=document.getElementById('edit-avatar').files[0]; let avatarUrl=null; if(file) avatarUrl=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const updates={id:user.id, username:username, updated_at:new Date()}; if(avatarUrl) updates.avatar_url=avatarUrl; await db.from('profiles').upsert(updates); alert("Saved!"); loadProfile(); }
 
         // --- CHAT ---
@@ -476,130 +442,69 @@
             const chatBox = document.getElementById('chat-box');
             db.from('messages').select('*, profiles(avatar_url)').order('created_at', { ascending: false }).limit(50).then(({ data }) => {
                 chatBox.innerHTML = "";
-                if(data) {
-                    data.reverse().forEach(msg => appendMessage(msg));
-                    scrollToBottom();
-                    setTimeout(scrollToBottom, 500);
-                }
+                if(data) { data.reverse().forEach(msg => appendMessage(msg)); scrollToBottom(); setTimeout(scrollToBottom, 500); }
             });
             db.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
                   const { data: profile } = await db.from('profiles').select('avatar_url').eq('id', payload.new.user_id).single();
-                  const fullMsg = { ...payload.new, profiles: profile };
-                  appendMessage(fullMsg);
-                  scrollToBottom();
+                  const fullMsg = { ...payload.new, profiles: profile }; appendMessage(fullMsg); scrollToBottom();
               }).subscribe();
         }
         async function sendMessage() { const input = document.getElementById('chat-input'); const text = input.value.trim(); if(!text) return; input.value = ""; await db.from('messages').insert([{ user_id: user.id, username: myUsername, content: text }]); }
         function appendMessage(msg) {
-            const box = document.getElementById('chat-box');
-            const el = document.createElement('div');
-            const isMe = msg.user_id === user.id;
-            const avatar = (msg.profiles && msg.profiles.avatar_url) ? msg.profiles.avatar_url : null;
+            const box = document.getElementById('chat-box'); const el = document.createElement('div'); const isMe = msg.user_id === user.id; const avatar = (msg.profiles && msg.profiles.avatar_url) ? msg.profiles.avatar_url : null;
             el.className = `msg-row ${isMe ? 'mine' : 'theirs'}`;
-            let html = '';
-            if(!isMe) {
-                 html += `<div class="msg-avatar" style="${avatar ? `background-image:url('${avatar}')` : 'background:#333'}"></div><div class="msg-wrapper"><span class="msg-name">${msg.username}</span><div class="msg-bubble">${msg.content}</div></div>`;
-            } else { html += `<div class="msg-bubble">${msg.content}</div>`; }
-            el.innerHTML = html;
-            box.appendChild(el);
+            let html = ''; if(!isMe) { html += `<div class="msg-avatar" style="${avatar ? `background-image:url('${avatar}')` : 'background:#333'}"></div><div class="msg-wrapper"><span class="msg-name">${msg.username}</span><div class="msg-bubble">${msg.content}</div></div>`; } else { html += `<div class="msg-bubble">${msg.content}</div>`; }
+            el.innerHTML = html; box.appendChild(el);
         }
-        function scrollToBottom() { 
-            const box = document.getElementById('chat-box'); 
-            requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; }); 
-        }
+        function scrollToBottom() { const box = document.getElementById('chat-box'); requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; }); }
 
-        // --- TOOLS ---
+        // --- OCS ---
         async function loadOcs() { const {data}=await db.from('characters').select('*').order('id',{ascending:false}); const list=document.getElementById('oc-list'); list.innerHTML=""; (data||[]).forEach(oc=>{ const el=document.createElement('div'); el.className='oc-card'; el.onclick=()=>openViewModal(oc); const bg=oc.image?`background-image: url('${oc.image}')`:`background-color: #222`; el.innerHTML=`<div class="oc-card-img" style="${bg}"></div><div class="oc-card-info"><h3>${oc.name}</h3><small>${oc.role||'No Role'}</small></div>`; list.appendChild(el); }); }
         function openViewModal(oc) { currentOc=oc; document.getElementById('view-name').innerText=oc.name; document.getElementById('view-role').innerText=oc.role||"Unknown Role"; document.getElementById('view-age').innerText=oc.age||"-"; document.getElementById('view-gender').innerText=oc.gender||"-"; document.getElementById('view-goal').innerText=oc.goals||"-"; document.getElementById('view-desc').innerText=oc.desc||"No physical description."; document.getElementById('view-personality').innerText=oc.personality||"No personality details."; document.getElementById('view-lore').innerText=oc.lore||"No backstory logged."; const imgHeader=document.getElementById('view-img'); if(oc.image){imgHeader.style.backgroundImage=`url('${oc.image}')`;imgHeader.style.display='block';}else{imgHeader.style.display='none';} const songContainer=document.getElementById('view-song-container'); songContainer.innerHTML=""; if(oc.theme_song){ if(oc.theme_song.includes('youtube.com')||oc.theme_song.includes('youtu.be')){ let vId=oc.theme_song.split('v=')[1]; if(!vId&&oc.theme_song.includes('youtu.be'))vId=oc.theme_song.split('/').pop(); if(vId){ const amp=vId.indexOf('&'); if(amp!==-1)vId=vId.substring(0,amp); songContainer.innerHTML=`<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:12px; margin-bottom:20px;"></iframe>`; } }else{ songContainer.innerHTML=`<a href="${oc.theme_song}" target="_blank" class="theme-btn">▶ Play Theme Song</a>`; } } document.getElementById('oc-view-modal').style.display='flex'; }
         function openOcForm(isEdit=false) { document.getElementById('oc-form-modal').style.display='block'; if(isEdit&&currentOc){ document.getElementById('form-title').innerText="Edit Character"; document.getElementById('form-id').value=currentOc.id; document.getElementById('form-name').value=currentOc.name; document.getElementById('form-role').value=currentOc.role; document.getElementById('form-age').value=currentOc.age; document.getElementById('form-gender').value=currentOc.gender; document.getElementById('form-desc').value=currentOc.desc; document.getElementById('form-personality').value=currentOc.personality; document.getElementById('form-goals').value=currentOc.goals; document.getElementById('form-lore').value=currentOc.lore; document.getElementById('form-song').value=currentOc.theme_song||""; }else{ document.getElementById('form-title').innerText="New Character"; document.getElementById('form-id').value=""; document.querySelectorAll('#oc-form-modal input:not([type=hidden]), #oc-form-modal textarea').forEach(i=>i.value=""); } }
         function editOcFromView() { document.getElementById('oc-view-modal').style.display='none'; openOcForm(true); }
         async function saveOc() { const id=document.getElementById('form-id').value; const name=document.getElementById('form-name').value; if(!name)return alert("Name is required"); const file=document.getElementById('form-image').files[0]; let imageBase64=null; if(file)imageBase64=await new Promise(r=>{const rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(file);}); const ocData={ user_id:user.id, name:name, role:document.getElementById('form-role').value, age:document.getElementById('form-age').value, gender:document.getElementById('form-gender').value, "desc":document.getElementById('form-desc').value, personality:document.getElementById('form-personality').value, goals:document.getElementById('form-goals').value, lore:document.getElementById('form-lore').value, theme_song:document.getElementById('form-song').value }; if(imageBase64)ocData.image=imageBase64; if(id)await db.from('characters').update(ocData).eq('id',id); else await db.from('characters').insert([ocData]); document.getElementById('oc-form-modal').style.display='none'; loadOcs(); }
         async function deleteOc() { if(!confirm("Delete this character?"))return; await db.from('characters').delete().eq('id',currentOc.id); document.getElementById('oc-view-modal').style.display='none'; loadOcs(); }
+
+        // --- NOTEPAD (NEW) ---
+        async function loadNotes() {
+            const { data } = await db.from('notes').select('*').order('created_at', { ascending: false });
+            const list = document.getElementById('notes-list'); list.innerHTML = "";
+            if(!data || data.length === 0) { list.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No notes yet.</div>'; return; }
+            data.forEach(note => {
+                const el = document.createElement('div'); el.className = 'oc-card'; el.style.height = '200px';
+                el.onclick = () => openNoteModal(note);
+                const preview = note.content ? note.content.substring(0, 100) + "..." : "Empty note";
+                el.innerHTML = `<div class="oc-card-info" style="border:none; justify-content:flex-start;"><h3 style="margin-bottom:10px;">${note.title || 'Untitled'}</h3><p style="color:#888; font-size:0.85rem; overflow:hidden;">${preview}</p><small style="margin-top:auto; color:#444;">${new Date(note.created_at).toLocaleDateString()}</small></div>`;
+                list.appendChild(el);
+            });
+        }
+        function openNoteModal(note = null) {
+            const modal = document.getElementById('note-modal'); const delBtn = document.getElementById('btn-delete-note');
+            modal.style.display = 'flex'; // FORCE DISPLAY
+            if (note) {
+                document.getElementById('note-title-header').innerText = "Edit Note"; document.getElementById('note-id').value = note.id; document.getElementById('note-title').value = note.title; document.getElementById('note-content').value = note.content; delBtn.style.display = 'block';
+            } else {
+                document.getElementById('note-title-header').innerText = "New Note"; document.getElementById('note-id').value = ""; document.getElementById('note-title').value = ""; document.getElementById('note-content').value = ""; delBtn.style.display = 'none';
+            }
+        }
+        async function saveNote() {
+            const id = document.getElementById('note-id').value; const title = document.getElementById('note-title').value; const content = document.getElementById('note-content').value;
+            if (!title && !content) return alert("Write something first!");
+            const noteData = { user_id: user.id, title: title, content: content };
+            if (id) { await db.from('notes').update(noteData).eq('id', id); } else { await db.from('notes').insert([noteData]); }
+            document.getElementById('note-modal').style.display = 'none'; loadNotes();
+        }
+        async function deleteNote() {
+            const id = document.getElementById('note-id').value; if (!id || !confirm("Delete this note?")) return;
+            await db.from('notes').delete().eq('id', id); document.getElementById('note-modal').style.display = 'none'; loadNotes();
+        }
+
+        // --- EXTRAS ---
         async function searchWord() { const w=document.getElementById('dict-search').value.toLowerCase(); const resBox=document.getElementById('dict-result'); resBox.innerHTML='<div style="color:#888">Searching...</div>'; try{const dr=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);if(dr.ok){const d=await dr.json();let s="";if(d[0].meanings[0].synonyms.length>0)s=`<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;resBox.innerHTML=`<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${s}`;return;}}catch(e){} try{const wr=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);if(!wr.ok)throw new Error("Wiki not found");const wd=await wr.json();if(wd.type==='standard'||wd.type==='disambiguation'){const img=wd.thumbnail?`<img src="${wd.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">`:'';resBox.innerHTML=`${img}<h3 style="margin:0">${wd.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${wd.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;}else{resBox.innerHTML="No distinct result found.";}}catch(e){resBox.innerHTML=`<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;} }
         async function generatePrompt() { const g=document.getElementById('prompt-genre').value; if(!promptCache[g]){document.getElementById('prompt-result').innerText="Loading...";const{data}=await db.from('prompts').select('content').eq('genre',g);if(data&&data.length>0)promptCache[g]=data.map(i=>i.content);else promptCache[g]=["No prompts."];}const l=promptCache[g];document.getElementById('prompt-result').innerText=l[Math.floor(Math.random()*l.length)]; }
         async function generateNames() { const c=parseInt(document.getElementById('name-count').value); const g=document.getElementById('name-gender').value; const r=document.getElementById('name-result'); if(!nameCache[g]){r.innerText="Loading...";const{data}=await db.from('names').select('name').eq('gender',g);if(data&&data.length>0)nameCache[g]=data.map(i=>i.name);else nameCache[g]=["No names."];}const l=nameCache[g];const s=l.sort(()=>0.5-Math.random());r.innerText=s.slice(0,c).join(", "); }
-        // --- NOTEPAD ---
-async function loadNotes() {
-    const { data } = await db.from('notes').select('*').order('created_at', { ascending: false });
-    const list = document.getElementById('notes-list');
-    list.innerHTML = "";
-    
-    if(!data || data.length === 0) {
-        list.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No notes yet.</div>';
-        return;
-    }
-
-    data.forEach(note => {
-        const el = document.createElement('div');
-        el.className = 'oc-card';
-        el.style.height = '200px'; // Shorter card for notes
-        el.onclick = () => openNoteModal(note);
         
-        // Preview text (first 100 chars)
-        const preview = note.content ? note.content.substring(0, 100) + "..." : "Empty note";
-        
-        el.innerHTML = `
-            <div class="oc-card-info" style="border:none; justify-content:flex-start;">
-                <h3 style="margin-bottom:10px;">${note.title || 'Untitled'}</h3>
-                <p style="color:#888; font-size:0.85rem; overflow:hidden;">${preview}</p>
-                <small style="margin-top:auto; color:#444;">${new Date(note.created_at).toLocaleDateString()}</small>
-            </div>
-        `;
-        list.appendChild(el);
-    });
-}
-
-function openNoteModal(note = null) {
-    const modal = document.getElementById('note-modal');
-    const delBtn = document.getElementById('btn-delete-note');
-    
-    modal.style.display = 'flex';
-    
-    if (note) {
-        document.getElementById('note-title-header').innerText = "Edit Note";
-        document.getElementById('note-id').value = note.id;
-        document.getElementById('note-title').value = note.title;
-        document.getElementById('note-content').value = note.content;
-        delBtn.style.display = 'block';
-    } else {
-        document.getElementById('note-title-header').innerText = "New Note";
-        document.getElementById('note-id').value = "";
-        document.getElementById('note-title').value = "";
-        document.getElementById('note-content').value = "";
-        delBtn.style.display = 'none'; // Can't delete a new note
-    }
-}
-
-async function saveNote() {
-    const id = document.getElementById('note-id').value;
-    const title = document.getElementById('note-title').value;
-    const content = document.getElementById('note-content').value;
-    
-    if (!title && !content) return alert("Write something first!");
-    
-    const noteData = { user_id: user.id, title: title, content: content };
-    
-    if (id) {
-        await db.from('notes').update(noteData).eq('id', id);
-    } else {
-        await db.from('notes').insert([noteData]);
-    }
-    
-    document.getElementById('note-modal').style.display = 'none';
-    loadNotes();
-}
-
-async function deleteNote() {
-    const id = document.getElementById('note-id').value;
-    if (!id) return;
-    
-    if (!confirm("Delete this note?")) return;
-    
-    await db.from('notes').delete().eq('id', id);
-    document.getElementById('note-modal').style.display = 'none';
-    loadNotes();
-}
-
         window.onload = checkSession;
     </script>
 </body>
