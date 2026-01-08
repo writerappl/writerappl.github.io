@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Writer V35</title>
+    <title>Writer V37</title>
     <!-- Supabase (Fixed UMD Source) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@
 
         /* --- SOCIAL TAB --- */
         .social-layout { display: flex; height: 100%; }
-        .friends-list { width: 280px; border-right: 1px solid var(--border); background: #050505; display: flex; flex-direction: column; overflow-y: auto; }
+        .friends-list { width: 280px; border-right: 1px solid var(--border); background: #050505; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
         .friend-item { padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
         .friend-item:hover { background: #111; }
         .friend-item.active { background: #161616; border-left: 3px solid var(--blue); }
@@ -79,8 +79,9 @@
             /* MOBILE SOCIAL FIX */
             .social-layout { flex-direction: column; position: relative; }
             .friends-list { width: 100%; height: 100%; border-right: none; position: absolute; z-index: 10; background: #000; }
-            .friends-list.hidden { display: none; }
-            .private-chat-area { flex: 1; display: none; } /* Hidden by default */
+            /* Only hide on mobile when class is present */
+            .friends-list.hidden-mobile { display: none; } 
+            .private-chat-area { flex: 1; display: none; } /* Hidden by default on mobile */
             .private-chat-area.active { display: flex; height: 100%; }
             #chat-back-btn { display: block; }
         }
@@ -181,7 +182,7 @@
             </div>
         </div>
 
-        <!-- SOCIAL SECTION (MOBILE OPTIMIZED) -->
+        <!-- SOCIAL SECTION -->
         <div id="social" class="section">
             <div class="social-layout">
                 <div class="friends-list" id="friends-panel">
@@ -368,9 +369,12 @@
             for (const rel of relations) {
                 const isMeA = rel.user_a === user.id;
                 const friendId = isMeA ? rel.user_b : rel.user_a;
-                // Note: Assuming 'email' is available in profiles via previous SQL update. If not, it will be undefined.
-                const { data: friendProfile } = await db.from('profiles').select('username, avatar_url, email').eq('id', friendId).single();
                 
+                // SAFE SELECT: Use select('*') to get everything without crashing if 'email' is missing
+                const { data: friendProfile, error } = await db.from('profiles').select('*').eq('id', friendId).single();
+                
+                if (error || !friendProfile) continue; // Skip if profile loading failed
+
                 const div = document.createElement('div');
                 
                 if (rel.status === 'pending') {
@@ -388,7 +392,10 @@
                     div.className = 'friend-item';
                     div.onclick = () => openPrivateChat(friendId, friendProfile);
                     const av = friendProfile.avatar_url ? `background-image:url('${friendProfile.avatar_url}')` : 'background:#333';
+                    
+                    // Show email only if it exists in the fetched data
                     const emailDisplay = friendProfile.email ? `<small style="color:#666; font-size:0.7rem; display:block;">${friendProfile.email}</small>` : '';
+                    
                     div.innerHTML = `<div style="width:32px; height:32px; border-radius:50%; ${av}; background-size:cover;"></div><div><span>${friendProfile.username}</span>${emailDisplay}</div>`;
                 }
                 list.appendChild(div);
@@ -405,7 +412,7 @@
 
             // Mobile logic: Hide friends list, show chat
             if (window.innerWidth <= 768) {
-                document.getElementById('friends-panel').classList.add('hidden');
+                document.getElementById('friends-panel').classList.add('hidden-mobile'); // Only hides on mobile now
                 document.getElementById('chat-panel').classList.add('active');
             }
 
@@ -429,7 +436,7 @@
         
         function closePrivateChatMobile() {
             activeChatFriendId = null;
-            document.getElementById('friends-panel').classList.remove('hidden');
+            document.getElementById('friends-panel').classList.remove('hidden-mobile');
             document.getElementById('chat-panel').classList.remove('active');
         }
 
