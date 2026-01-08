@@ -135,7 +135,7 @@
         .msg-row.mine .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
         .msg-row.mine .msg-name { display: none; }
 
-        /* --- MOBILE OPTIMIZATIONS --- */
+              /* --- MOBILE OPTIMIZATIONS --- */
         @media(max-width: 768px) {
             body { flex-direction: column; }
             
@@ -148,32 +148,51 @@
                 border-top: 1px solid var(--border); border-right: none; 
                 display: flex; flex-direction: row; align-items: center; 
                 z-index: 9000; overflow-x: auto; white-space: nowrap; 
+                justify-content: space-between; /* Spread items */
             }
             
             .logo { display: none; }
-            .nav-items { display: flex; flex-direction: row; width: 100%; gap: 5px; padding: 0 10px; justify-content: space-around; }
+            
+            /* Scrollable Nav Items */
+            .nav-items { 
+                display: flex; flex-direction: row; 
+                width: auto; flex: 1; /* Take available space */
+                gap: 5px; padding: 0 10px; 
+                overflow-x: auto; /* Allow scrolling if too many items */
+            }
+            
             .menu-btn { 
                 padding: 8px 12px; border-radius: 16px; background: transparent; 
                 border: none; width: auto; font-size: 0.8rem; justify-content: center;
+                flex-shrink: 0; /* Don't squash buttons */
             }
             .menu-btn.active { background: #1a1a1a; color: #fff; }
-            .profile-btn-container { display: none; }
+            
+            /* RE-ADDED PROFILE BUTTON */
+            .profile-btn-container { 
+                display: flex; margin: 0; padding: 0; border: none; 
+                margin-right: 10px; /* Space from edge */
+                flex-shrink: 0;
+            }
+            
+            .profile-btn { width: 40px; height: 40px; }
+            .avatar-sm { width: 32px; height: 32px; border: 2px solid var(--border); }
             
             /* CONTENT ADJUSTMENTS */
             .main-content { 
-                height: 100dvh; /* Full viewport height */
-                padding-bottom: var(--nav-height); /* Make room for Nav */
+                height: 100dvh; 
+                padding-bottom: var(--nav-height); 
             }
             .section { padding: 20px; padding-bottom: 40px; }
 
-            /* CHAT MOBILE FIX (No Floating Glitches) */
+            /* CHAT MOBILE FIX */
             #tavern.section.active { 
-                height: 100%; /* Fill the space above Nav */
-                padding-bottom: 0; /* Reset */
+                height: 100%; 
+                padding-bottom: 0; 
             }
             .chat-container { height: 100%; }
             .chat-input-area { 
-                position: static; /* Natural flow, no absolute positioning */
+                position: static; 
                 padding: 10px 14px;
             }
         }
