@@ -396,7 +396,8 @@
                     // User is signed in -> HIDE Auth, SHOW App
                     document.getElementById('auth-screen').style.display = 'none';
                     loadProfile(); 
-                    loadOcs(); 
+                    loadOcs();
+                    loadNotes();
                     initChat();
                 } else { 
                     // No User -> SHOW Auth, HIDE Onboarding
@@ -517,7 +518,88 @@
         async function searchWord() { const w=document.getElementById('dict-search').value.toLowerCase(); const resBox=document.getElementById('dict-result'); resBox.innerHTML='<div style="color:#888">Searching...</div>'; try{const dr=await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${w}`);if(dr.ok){const d=await dr.json();let s="";if(d[0].meanings[0].synonyms.length>0)s=`<br><br><small style="color:#888">SYNONYMS: ${d[0].meanings[0].synonyms.slice(0,5).join(", ")}</small>`;resBox.innerHTML=`<h3 style="margin:0; text-transform:capitalize;">${d[0].word}</h3><small style="color:#666">${d[0].meanings[0].partOfSpeech}</small><p style="color:#ddd; line-height:1.5;">${d[0].meanings[0].definitions[0].definition}</p>${s}`;return;}}catch(e){} try{const wr=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${w}`);if(!wr.ok)throw new Error("Wiki not found");const wd=await wr.json();if(wd.type==='standard'||wd.type==='disambiguation'){const img=wd.thumbnail?`<img src="${wd.thumbnail.source}" style="float:right; width:80px; height:80px; border-radius:8px; object-fit:cover; margin-left:15px; border:1px solid #333;">`:'';resBox.innerHTML=`${img}<h3 style="margin:0">${wd.title}</h3><p style="color:#ccc; font-size:0.95rem; line-height:1.5;">${wd.extract}</p><div style="clear:both;"></div><small style="color:#666">Source: Wikipedia</small>`;}else{resBox.innerHTML="No distinct result found.";}}catch(e){resBox.innerHTML=`<span style="color:#ff5555">"${w}" not found in Dictionary or Wikipedia.</span>`;} }
         async function generatePrompt() { const g=document.getElementById('prompt-genre').value; if(!promptCache[g]){document.getElementById('prompt-result').innerText="Loading...";const{data}=await db.from('prompts').select('content').eq('genre',g);if(data&&data.length>0)promptCache[g]=data.map(i=>i.content);else promptCache[g]=["No prompts."];}const l=promptCache[g];document.getElementById('prompt-result').innerText=l[Math.floor(Math.random()*l.length)]; }
         async function generateNames() { const c=parseInt(document.getElementById('name-count').value); const g=document.getElementById('name-gender').value; const r=document.getElementById('name-result'); if(!nameCache[g]){r.innerText="Loading...";const{data}=await db.from('names').select('name').eq('gender',g);if(data&&data.length>0)nameCache[g]=data.map(i=>i.name);else nameCache[g]=["No names."];}const l=nameCache[g];const s=l.sort(()=>0.5-Math.random());r.innerText=s.slice(0,c).join(", "); }
+        // --- NOTEPAD ---
+async function loadNotes() {
+    const { data } = await db.from('notes').select('*').order('created_at', { ascending: false });
+    const list = document.getElementById('notes-list');
+    list.innerHTML = "";
+    
+    if(!data || data.length === 0) {
+        list.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No notes yet.</div>';
+        return;
+    }
+
+    data.forEach(note => {
+        const el = document.createElement('div');
+        el.className = 'oc-card';
+        el.style.height = '200px'; // Shorter card for notes
+        el.onclick = () => openNoteModal(note);
         
+        // Preview text (first 100 chars)
+        const preview = note.content ? note.content.substring(0, 100) + "..." : "Empty note";
+        
+        el.innerHTML = `
+            <div class="oc-card-info" style="border:none; justify-content:flex-start;">
+                <h3 style="margin-bottom:10px;">${note.title || 'Untitled'}</h3>
+                <p style="color:#888; font-size:0.85rem; overflow:hidden;">${preview}</p>
+                <small style="margin-top:auto; color:#444;">${new Date(note.created_at).toLocaleDateString()}</small>
+            </div>
+        `;
+        list.appendChild(el);
+    });
+}
+
+function openNoteModal(note = null) {
+    const modal = document.getElementById('note-modal');
+    const delBtn = document.getElementById('btn-delete-note');
+    
+    modal.style.display = 'flex';
+    
+    if (note) {
+        document.getElementById('note-title-header').innerText = "Edit Note";
+        document.getElementById('note-id').value = note.id;
+        document.getElementById('note-title').value = note.title;
+        document.getElementById('note-content').value = note.content;
+        delBtn.style.display = 'block';
+    } else {
+        document.getElementById('note-title-header').innerText = "New Note";
+        document.getElementById('note-id').value = "";
+        document.getElementById('note-title').value = "";
+        document.getElementById('note-content').value = "";
+        delBtn.style.display = 'none'; // Can't delete a new note
+    }
+}
+
+async function saveNote() {
+    const id = document.getElementById('note-id').value;
+    const title = document.getElementById('note-title').value;
+    const content = document.getElementById('note-content').value;
+    
+    if (!title && !content) return alert("Write something first!");
+    
+    const noteData = { user_id: user.id, title: title, content: content };
+    
+    if (id) {
+        await db.from('notes').update(noteData).eq('id', id);
+    } else {
+        await db.from('notes').insert([noteData]);
+    }
+    
+    document.getElementById('note-modal').style.display = 'none';
+    loadNotes();
+}
+
+async function deleteNote() {
+    const id = document.getElementById('note-id').value;
+    if (!id) return;
+    
+    if (!confirm("Delete this note?")) return;
+    
+    await db.from('notes').delete().eq('id', id);
+    document.getElementById('note-modal').style.display = 'none';
+    loadNotes();
+}
+
         window.onload = checkSession;
     </script>
 </body>
